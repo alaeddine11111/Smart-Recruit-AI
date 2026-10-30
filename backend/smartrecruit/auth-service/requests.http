@@ -1,0 +1,51 @@
+### Register a candidate
+POST http://localhost:8081/api/auth/register/candidat
+Content-Type: application/json
+
+{
+  "nom": "Hassan Snoussi Jerbi",
+  "email": "hassan@example.com",
+  "motDePasse": "Password123",
+  "telephone": "+21600000000",
+  "localisation": "Bizerte"
+}
+
+### Register a recruiter (creates the company if it does not exist)
+POST http://localhost:8081/api/auth/register/recruteur
+Content-Type: application/json
+
+{
+  "nom": "Sana Ben Ali",
+  "email": "sana@acme.tn",
+  "motDePasse": "Password123",
+  "poste": "RH",
+  "entrepriseNom": "Acme Tunisie",
+  "entrepriseDescription": "Software company",
+  "entrepriseSiteWeb": "https://acme.tn"
+}
+
+### Login (copy the token from the response)
+POST http://localhost:8081/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "hassan@example.com",
+  "motDePasse": "Password123"
+}
+
+### Current user
+GET http://localhost:8081/api/auth/me
+Authorization: Bearer PASTE_TOKEN_HERE
+
+### Admin login
+POST http://localhost:8081/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@smartrecruit.tn",
+  "motDePasse": "Admin@12345"
+}
+
+### List users (admin only: 403 for other roles)
+GET http://localhost:8081/api/admin/utilisateurs
+Authorization: Bearer PASTE_ADMIN_TOKEN_HERE

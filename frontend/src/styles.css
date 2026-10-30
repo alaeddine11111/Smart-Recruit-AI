@@ -1,0 +1,28 @@
+:root {
+  --chalk: #F2F5F8;
+  --paper: #FFFFFF;
+  --ink: #0F1B33;
+  --cobalt: #1A3FD1;
+  --highlighter: #FFD93D;
+  --berry: #C2255C;
+  --line: #D5DCE6;
+
+  --font-ui: 'Bricolage Grotesque', system-ui, sans-serif;
+  --font-doc: 'Newsreader', Georgia, serif;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--chalk);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  line-height: 1.5;
+}
+
+:focus-visible { outline: 3px solid var(--cobalt); outline-offset: 2px; }
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+}

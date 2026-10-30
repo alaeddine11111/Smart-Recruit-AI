@@ -1,0 +1,10 @@
+target/
+.idea/
+*.iml
+.vscode/
+node_modules/
+dist/
+.angular/
+.env
+uploads/
+*.log

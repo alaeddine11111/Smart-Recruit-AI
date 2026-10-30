@@ -1,0 +1,22 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: auth-service
+  data:
+    mongodb:
+      uri: ${MONGODB_URI:mongodb://localhost:27017/smartrecruit_auth}
+      auto-index-creation: true
+
+app:
+  jwt:
+    # Base64, at least 256 bits. DEV ONLY: override with the JWT_SECRET env variable outside local work.
+    secret: ${JWT_SECRET:85ZcnqJvaih2oDxHpJX6eug/UyniFgZKuf8v6BSVuk80e+p5xZNM0CszbJQCZ913}
+    expiration-ms: 86400000
+  admin:
+    # Seeded once if no admin exists. DEV ONLY: override with env variables.
+    email: ${ADMIN_EMAIL:admin@smartrecruit.tn}
+    password: ${ADMIN_PASSWORD:Admin@12345}
+  cors:
+    allowed-origins: http://localhost:4200

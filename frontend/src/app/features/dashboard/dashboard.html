@@ -1,0 +1,49 @@
+<header class="bar">
+  <strong class="brand">SmartRecruit AI</strong>
+  <div class="who">
+    <span>{{ user()?.nom }}</span>
+    <button type="button" (click)="auth.logout()">Se déconnecter</button>
+  </div>
+</header>
+
+<main class="content">
+  <h1>Bonjour, {{ user()?.nom }}</h1>
+
+  @switch (user()?.role) {
+    @case ('CANDIDAT') {
+      <p>Votre espace candidat. Bientôt : déposer votre CV et postuler aux offres.</p>
+    }
+    @case ('RECRUTEUR') {
+      <p>Votre espace recruteur. Bientôt : publier des offres et suivre les candidatures.</p>
+    }
+    @case ('ADMIN') {
+      <p>Votre espace administrateur. Voici les comptes de la plateforme.</p>
+    }
+  }
+
+  <h2>Réponse de /api/auth/me</h2>
+  <pre>{{ me() | json }}</pre>
+
+  @if (users(); as list) {
+    <h2>Utilisateurs</h2>
+    <table>
+      <thead>
+        <tr><th>Nom</th><th>Email</th><th>Rôle</th><th>Créé le</th></tr>
+      </thead>
+      <tbody>
+        @for (u of list; track u.id) {
+          <tr>
+            <td>{{ u.nom }}</td>
+            <td>{{ u.email }}</td>
+            <td>{{ u.role }}</td>
+            <td>{{ u.dateCreation | date: 'dd/MM/yyyy' }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+
+  @if (adminError()) {
+    <p class="err">{{ adminError() }}</p>
+  }
+</main>
