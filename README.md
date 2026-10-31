@@ -109,4 +109,9 @@ Send the token as `Authorization: Bearer <token>`.
 
 ## Team
 
-Add your team members here.
+Ala Eddine Abdelmalek
+Ibrahim Mustapha Maazi
+Mohamed Bejaoui
+Refka Mimouni
+Adem Zalaiti
+Hassan Snoussi Jerbi.
