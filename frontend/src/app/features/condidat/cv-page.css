@@ -1,0 +1,170 @@
+.bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+  background: var(--paper);
+  border-bottom: 1.5px solid var(--line);
+}
+
+.brand { color: var(--cobalt); font-size: 1.1rem; }
+.who { display: flex; align-items: center; gap: 1rem; }
+
+.who button {
+  font: inherit;
+  font-weight: 500;
+  padding: 0.45rem 1rem;
+  border: 1.5px solid var(--cobalt);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--cobalt);
+  cursor: pointer;
+}
+
+.who button:hover { background: var(--cobalt); color: #fff; }
+
+.layout {
+  max-width: 64rem;
+  margin: 0 auto;
+  padding: 3.5rem 2rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 4rem;
+  align-items: center;
+}
+
+h1 {
+  margin: 0 0 0.75rem;
+  font-size: 2.8rem;
+  line-height: 1.05;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.lead { margin: 0 0 2rem; color: #4a5877; max-width: 38ch; font-size: 1.1rem; }
+
+.current {
+  padding: 1rem 1.25rem;
+  border-left: 4px solid var(--cobalt);
+  background: var(--paper);
+  border-radius: 0 10px 10px 0;
+}
+
+.current.fresh { border-left-color: var(--highlighter); }
+.current p { margin: 0; }
+.current-title { font-weight: 600; font-size: 0.95rem; }
+.current-file { font-family: var(--font-doc); font-size: 1.15rem; margin: 0.2rem 0; word-break: break-word; }
+.current-meta { color: #4a5877; font-size: 0.9rem; }
+
+/* ---------- The sheet you drop your CV on ---------- */
+.drop-side { display: grid; justify-items: center; gap: 1rem; }
+
+.drop {
+  width: min(100%, 21rem);
+  filter: drop-shadow(10px 10px 0 rgba(26, 63, 209, 0.18));
+}
+
+.sheet {
+  position: relative;
+  min-height: 24rem;
+  padding: 2rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  background: var(--paper);
+  border: 2px dashed var(--cobalt);
+  clip-path: polygon(0 0, calc(100% - 2.2rem) 0, 100% 2.2rem, 100% 100%, 0 100%);
+  overflow: hidden;
+  transition: background 0.2s;
+}
+
+/* folded corner */
+.sheet::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 2.2rem;
+  height: 2.2rem;
+  background: #dfe5f1;
+  clip-path: polygon(0 0, 100% 100%, 0 100%);
+}
+
+.drop.over .sheet { background: #eef2ff; border-style: solid; }
+
+/* the scan line loops while the file is being sent */
+.sheet.scanning::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 2px;
+  background: var(--cobalt);
+  animation: scan 1.6s ease-in-out infinite;
+}
+
+@keyframes scan {
+  from { top: 0; }
+  to   { top: 100%; }
+}
+
+.sheet p { margin: 0; }
+.sheet-label { font-family: var(--font-doc); font-size: 1.5rem; font-weight: 600; }
+.sheet-file { font-family: var(--font-doc); font-size: 1.25rem; margin: 0.6rem 0 0.3rem; word-break: break-word; }
+.sheet-meta { color: #4a5877; margin-top: 0.4rem; }
+
+mark {
+  color: inherit;
+  padding: 0 0.15em;
+  background: linear-gradient(var(--highlighter), var(--highlighter)) no-repeat 0 85% / 100% 75%;
+}
+
+/* ---------- Progress, errors, buttons ---------- */
+.meter { width: min(100%, 21rem); height: 8px; border-radius: 999px; background: var(--line); overflow: hidden; }
+.meter span { display: block; height: 100%; background: var(--cobalt); transition: width 0.15s; }
+.hint { margin: 0; color: #4a5877; font-size: 0.95rem; }
+
+.err { margin: 0; color: var(--berry); font-size: 0.95rem; }
+.banner {
+  width: min(100%, 21rem);
+  padding: 0.7rem 0.85rem;
+  border-left: 4px solid var(--berry);
+  background: #fbeaf0;
+}
+
+.actions { width: min(100%, 21rem); display: grid; gap: 0.6rem; }
+
+.submit, .pick, .ghost {
+  font: inherit;
+  font-weight: 600;
+  text-align: center;
+  padding: 0.85rem 1rem;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.submit, .pick { border: 0; background: var(--cobalt); color: #fff; }
+.submit:hover:not(:disabled), .pick:hover { background: #1432a8; }
+.submit:disabled { opacity: 0.6; cursor: wait; }
+.ghost { border: 1.5px solid var(--line); background: transparent; color: var(--ink); }
+.ghost:hover { border-color: var(--ink); }
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.visually-hidden:focus-visible + .pick { outline: 3px solid var(--cobalt); outline-offset: 3px; }
+
+@media (max-width: 800px) {
+  .layout { grid-template-columns: 1fr; gap: 2.5rem; padding: 2rem 1.25rem; }
+  .sheet { min-height: 16rem; }
+}

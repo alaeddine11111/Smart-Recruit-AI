@@ -37,3 +37,9 @@ export interface RegisterRecruteurRequest {
   entrepriseDescription?: string;
   entrepriseSiteWeb?: string;
 }
+export interface CvInfo {
+  id: string;
+  nomFichier: string;
+  taille: number;
+  dateDepot: string;
+}

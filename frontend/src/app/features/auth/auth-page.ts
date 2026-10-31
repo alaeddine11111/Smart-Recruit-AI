@@ -19,7 +19,7 @@ interface SheetData {
 
 const CANDIDATE_SHEET: SheetData = {
   key: 'candidat',
-  name: 'Yasmine Trabelsi',
+  name: 'AlaEddine Abdelmalek',
   sub: 'Étudiante en développement, ISET Bizerte',
   paragraphs: [
     [
@@ -137,7 +137,7 @@ export class AuthPage {
             });
 
     request$.subscribe({
-      next: () => this.router.navigate(['/tableau-de-bord']),
+        next: res => this.router.navigate([res.user.role === 'CANDIDAT' ? '/mon-cv' : '/tableau-de-bord']),
       error: (e: HttpErrorResponse) => {
         this.loading.set(false);
         this.error.set(this.messageFrom(e));

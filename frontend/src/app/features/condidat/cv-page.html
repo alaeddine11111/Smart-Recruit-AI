@@ -1,0 +1,67 @@
+<header class="bar">
+  <strong class="brand">SmartRecruit AI</strong>
+  <div class="who">
+    <span>{{ auth.user()?.nom }}</span>
+    <button type="button" (click)="auth.logout()">Se déconnecter</button>
+  </div>
+</header>
+
+<main class="layout">
+  <section class="intro">
+    <h1>Déposez votre CV</h1>
+    <p class="lead">
+      Un PDF suffit. Notre IA en extrait vos compétences, puis vous validez celles qui
+      sont justes avant de recevoir des offres.
+    </p>
+
+    @if (current(); as cv) {
+      <div class="current" [class.fresh]="justUploaded()">
+        <p class="current-title">{{ justUploaded() ? 'CV bien déposé' : 'CV actuel' }}</p>
+        <p class="current-file">{{ cv.nomFichier }}</p>
+        <p class="current-meta">{{ size(cv.taille) }}, déposé le {{ cv.dateDepot | date: 'dd/MM/yyyy' }}</p>
+      </div>
+    }
+  </section>
+
+  <section class="drop-side">
+    <div class="drop" [class.over]="dragging()"
+         (dragover)="onDragOver($event)" (dragleave)="onDragLeave()" (drop)="onDrop($event)">
+      <div class="sheet" [class.scanning]="uploading()">
+        @if (file(); as f) {
+          <p class="sheet-label">Prêt à déposer</p>
+          <p class="sheet-file"><mark>{{ f.name }}</mark></p>
+          <p class="sheet-meta">{{ size(f.size) }}</p>
+        } @else {
+          <p class="sheet-label">Glissez votre CV ici</p>
+          <p class="sheet-meta">PDF, 5 Mo maximum</p>
+        }
+      </div>
+    </div>
+
+    @if (uploading()) {
+      <div class="meter" role="progressbar" aria-label="Envoi du CV"
+           aria-valuemin="0" aria-valuemax="100" [attr.aria-valuenow]="progress()">
+        <span [style.width.%]="progress()"></span>
+      </div>
+      <p class="hint">Envoi en cours, {{ progress() }} %</p>
+    }
+
+    @if (error()) {
+      <p class="err banner" role="alert">{{ error() }}</p>
+    }
+
+    <div class="actions">
+      @if (file()) {
+        <button class="submit" type="button" (click)="upload()" [disabled]="uploading()">
+          {{ uploading() ? 'Envoi en cours…' : 'Déposer ce CV' }}
+        </button>
+        @if (!uploading()) {
+          <button class="ghost" type="button" (click)="clear()">Retirer</button>
+        }
+      } @else {
+        <input id="cv-input" class="visually-hidden" type="file" accept="application/pdf" (change)="onPick($event)">
+        <label for="cv-input" class="pick">{{ current() ? 'Remplacer mon CV' : 'Choisir un fichier' }}</label>
+      }
+    </div>
+  </section>
+</main>

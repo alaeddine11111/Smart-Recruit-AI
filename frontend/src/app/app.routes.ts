@@ -18,5 +18,11 @@ export const routes: Routes = [
     loadComponent: () => import('./features/dashboard/dashboard').then(m => m.Dashboard),
   },
   { path: '', pathMatch: 'full', redirectTo: 'connexion' },
+    {
+    path: 'mon-cv',
+    canActivate: [authGuard],
+    loadComponent: () => import('./features/condidat/cv-page').then(m => m.CvPage),
+  },
   { path: '**', redirectTo: 'connexion' },
+  
 ];
