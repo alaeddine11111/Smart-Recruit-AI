@@ -1,0 +1,25 @@
+server:
+  port: 8082
+  error:
+    include-message: always
+
+spring:
+  application:
+    name: cv-service
+  data:
+    mongodb:
+      uri: ${MONGODB_URI:mongodb://localhost:27017/smartrecruit_cv}
+      auto-index-creation: true
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 5MB
+
+app:
+  jwt:
+    secret: ${JWT_SECRET:85ZcnqJvaih2oDxHpJX6eug/UyniFgZKuf8v6BSVuk80e+p5xZNM0CszbJQCZ913}
+    expiration-ms: 86400000
+  cors:
+    allowed-origins: http://localhost:4200
+  uploads-dir: ${UPLOADS_DIR:./uploads}
+  ocr-url: ${OCR_URL:http://localhost:8083}

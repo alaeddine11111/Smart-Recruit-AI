@@ -64,4 +64,49 @@
       }
     </div>
   </section>
+    @if (analyse(); as a) {
+    <section class="result">
+      @if (a.statut === 'EN_COURS') {
+        <h2>Analyse en cours…</h2>
+        <p class="hint">Lecture du CV et extraction des données, quelques secondes.</p>
+      }
+
+      @if (a.statut === 'ECHEC') {
+        <p class="err banner" role="alert">{{ a.messageErreur }}</p>
+      }
+
+      @if (a.statut === 'TERMINEE' && profil(); as p) {
+        <h2>Données extraites</h2>
+        <p class="hint">{{ a.ocrUtilise ? 'CV scanné : OCR utilisé' : 'Texte lu directement dans le PDF' }}</p>
+
+        <p><strong>Titre :</strong> {{ p.titre || '-' }}</p>
+        <p><strong>Téléphone :</strong> {{ p.telephone || '-' }}</p>
+        <p><strong>Localisation :</strong> {{ p.localisation || '-' }}</p>
+        <p><strong>Résumé :</strong> {{ p.resume || '-' }}</p>
+
+        <h3>Compétences</h3>
+        @for (c of p.competences; track $index) { <span class="chip">{{ c.nom }}</span> }
+        @empty { <p>Aucune détectée.</p> }
+
+        <h3>Expériences</h3>
+        @for (e of p.experiences; track $index) {
+          <p><strong>{{ e.poste }}</strong>, {{ e.entreprise }} ({{ e.dateDebut }} - {{ e.dateFin }})<br>{{ e.description }}</p>
+        } @empty { <p>Aucune détectée.</p> }
+
+        <h3>Formations</h3>
+        @for (f of p.formations; track $index) {
+          <p><strong>{{ f.diplome }}</strong>, {{ f.etablissement }} ({{ f.dateDebut }} - {{ f.dateFin }})</p>
+        } @empty { <p>Aucune détectée.</p> }
+
+        <h3>Langues</h3>
+        @for (l of p.langues; track $index) { <span class="chip">{{ l.nom }} {{ l.niveau }}</span> }
+        @empty { <p>Aucune détectée.</p> }
+
+        <details>
+          <summary>Texte brut lu par l'OCR</summary>
+          <pre>{{ a.texteOCR }}</pre>
+        </details>
+      }
+    </section>
+  }
 </main>

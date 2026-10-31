@@ -2,27 +2,10 @@ import { Routes } from '@angular/router';
 import { authGuard } from './core/auth.guard';
 
 export const routes: Routes = [
-  {
-    path: 'connexion',
-    loadComponent: () => import('./features/auth/auth-page').then(m => m.AuthPage),
-    data: { mode: 'login' },
-  },
-  {
-    path: 'inscription',
-    loadComponent: () => import('./features/auth/auth-page').then(m => m.AuthPage),
-    data: { mode: 'register' },
-  },
-  {
-    path: 'tableau-de-bord',
-    canActivate: [authGuard],
-    loadComponent: () => import('./features/dashboard/dashboard').then(m => m.Dashboard),
-  },
+  { path: 'connexion', loadComponent: () => import('./features/auth/auth-page').then(m => m.AuthPage), data: { mode: 'login' } },
+  { path: 'inscription', loadComponent: () => import('./features/auth/auth-page').then(m => m.AuthPage), data: { mode: 'register' } },
+  { path: 'tableau-de-bord', canActivate: [authGuard], loadComponent: () => import('./features/dashboard/dashboard').then(m => m.Dashboard) },
+  { path: 'mon-cv', canActivate: [authGuard], loadComponent: () => import('./features/condidat/cv-page').then(m => m.CvPage) },
   { path: '', pathMatch: 'full', redirectTo: 'connexion' },
-    {
-    path: 'mon-cv',
-    canActivate: [authGuard],
-    loadComponent: () => import('./features/condidat/cv-page').then(m => m.CvPage),
-  },
   { path: '**', redirectTo: 'connexion' },
-  
 ];

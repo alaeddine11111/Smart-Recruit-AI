@@ -43,3 +43,19 @@ export interface CvInfo {
   taille: number;
   dateDepot: string;
 }
+export interface Experience { poste: string; entreprise: string; dateDebut: string; dateFin: string; description: string; }
+export interface Formation { diplome: string; etablissement: string; dateDebut: string; dateFin: string; }
+export interface Competence { nom: string; categorie: string; }
+export interface Langue { nom: string; niveau: string; }
+export interface SectionPerso { id: string; titre: string; elements: string[]; }
+export interface Profil {
+  titre: string; resume: string; telephone: string; localisation: string;
+  experiences: Experience[]; formations: Formation[]; competences: Competence[];
+  langues: Langue[]; sections: SectionPerso[]; valide: boolean;
+}
+export interface AnalyseInfo {
+  statut: 'EN_COURS' | 'TERMINEE' | 'ECHEC';
+  messageErreur?: string;
+  texteOCR?: string;
+  ocrUtilise?: boolean;
+}

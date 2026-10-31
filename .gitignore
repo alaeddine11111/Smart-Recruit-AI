@@ -18,3 +18,8 @@
 
 # Logs
 *.log
+
+.venv/
+__pycache__/
+uploads/
+start.ps1
