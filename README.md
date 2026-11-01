@@ -50,7 +50,7 @@ A `cv-service` (CV upload and storage) will be added next to `backend` as a sepa
         py -3.12 -m venv .venv
         .\.venv\Scripts\Activate.ps1
         python -m pip install -r requirements.txt
-        $env:GEMINI_API_KEY = "AIza...your-key..."  ##api gemini 
+        $env:GEMINI_API_KEY = "generate every timeyou want run from this site web : https://aistudio.google.com/api-keys  ##api gemini 
         $env:GEMINI_MODEL = "gemini-3.8-flash"
         python -m uvicorn main:app --port 8083
 
