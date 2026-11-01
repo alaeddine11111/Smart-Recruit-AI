@@ -11,15 +11,19 @@ SmartRecruit AI connects candidates and recruiters. Candidates upload their CV, 
 |------|------------|
 | Web front end | Angular (standalone components, signals, reactive forms) |
 | Back end | Spring Boot 3 (Java 21), Spring Security, JWT |
+| OCR and AI extraction | Python 3.12, FastAPI, PyMuPDF, Google Gemini API (free tier) |
 | Database | MongoDB |
-| Planned | Node.js services, OCR and AI matching, Android app |
+| Planned | AI matching, job offers, Android app |
 
 ## Project structure
 
 ```
 smartrecruit/
-├── backend/     auth-service: users, login, JWT (port 8081)
-├── frontend/    Angular web app (port 4200)
+├── backend/smartrecruit/
+│   ├── auth-service/   users, login, JWT (port 8081)
+│   └── cv-service/     CV upload, storage, analysis result (port 8082)
+├── ocr-service/        Python service: PDF to text to structured data (port 8083)
+├── frontend/           Angular web app (port 4200)
 └── README.md
 ```
 
@@ -39,6 +43,17 @@ A `cv-service` (CV upload and storage) will be added next to `backend` as a sepa
 1. Start MongoDB.
 2. Open the `backend` folder in IntelliJ (open its `pom.xml` as a project).
 3. Run `AuthServiceApplication`. The API starts on `http://localhost:8081`.
+4. cv-service (terminal 2) " cd backend\smartrecruit\cv-service
+                            .\mvnw.cmd spring-boot:run"
+5. ocr-service (terminal 3) : 
+        cd ocr-service
+        py -3.12 -m venv .venv
+        .\.venv\Scripts\Activate.ps1
+        python -m pip install -r requirements.txt
+        $env:GEMINI_API_KEY = "AIza...your-key..."  ##api gemini 
+        $env:GEMINI_MODEL = "gemini-3.8-flash"
+        python -m uvicorn main:app --port 8083
+
 
 On first start, the app creates the database `smartrecruit_auth` and a default admin account.
 
@@ -62,6 +77,11 @@ The defaults in `backend/src/main/resources/application.yml` are for local devel
 | `JWT_SECRET` | Base64 key that signs tokens | a dev key in `application.yml` |
 | `ADMIN_EMAIL` | First admin account | `admin@smartrecruit.tn` |
 | `ADMIN_PASSWORD` | First admin password | `Admin@12345` |
+| `UPLOADS_DIR` | cv-service | Folder where PDFs are stored | `./uploads` |
+| `OCR_URL` | cv-service | Address of ocr-service | `http://localhost:8083` |
+| `GEMINI_API_KEY` | ocr-service | Gemini API key (no default, required) | none |
+| `GEMINI_MODEL` | ocr-service | Gemini model name. Model names change often: if you get a `404`, check the list in AI Studio | `gemini-38-flash` |
+
 
 Never commit real secrets to GitHub.
 
@@ -84,6 +104,24 @@ Never commit real secrets to GitHub.
 | GET | `/api/admin/utilisateurs` | Admin | List all users |
 
 Send the token as `Authorization: Bearer <token>`.
+
+### cv-service (port 8082)
+
+| Method | Endpoint | Access | Description |
+|--------|----------|--------|-------------|
+| POST | `/api/cv` | Logged in | Upload a PDF (replaces the previous CV) and start the analysis |
+| GET | `/api/cv/me` | Logged in | Current CV information (404 if none) |
+| GET | `/api/cv/analyse` | Logged in | Analysis status (`EN_COURS`, `TERMINEE`, `ECHEC`) and raw text |
+| GET | `/api/profil` | Logged in | Data extracted from the CV |
+| PUT | `/api/profil` | Logged in | Save corrected data |
+| POST | `/api/profil/valider` | Logged in | Mark the data as validated |
+
+### ocr-service (port 8083)
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/analyse` | Multipart `file` (PDF). Returns `texteOCR`, `ocrUtilise`, `pages` and `donnees` |
+| GET | `/docs` | Swagger page to test the service |
 
 ## Front end pages
 
