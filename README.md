@@ -147,7 +147,7 @@ Errors: `400` not a PDF, `422` unreadable PDF, `429` free Gemini limit reached, 
 - [ ] Interview preparation
 - [ ] Role dashboards
 
-## Troubleshooting
+## Troubleshooting.
 
 | Problem | Cause and fix |
 |---------|---------------|
