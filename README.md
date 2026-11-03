@@ -35,6 +35,17 @@ For now, the CV page in the front end calls `ocr-service` directly, to show the 
 1. Start MongoDB.
 2. Open the `backend` folder in IntelliJ: open its `pom.xml` as a project, then wait for Maven to finish.
 3. Run `AuthServiceApplication`. The API starts on `http://localhost:8081`.
+4. cv-service (terminal 2) " cd backend\smartrecruit\cv-service
+                            .\mvnw.cmd spring-boot:run"
+5. ocr-service (terminal 3) : 
+        cd ocr-service
+        py -3.12 -m venv .venv
+        .\.venv\Scripts\Activate.ps1
+        python -m pip install -r requirements.txt
+        $env:GEMINI_API_KEY = "generate every timeyou want run from this site web : https://aistudio.google.com/api-keys  ##api gemini 
+        $env:GEMINI_MODEL = "gemini-3.8-flash"
+        python -m uvicorn main:app --port 8083
+
 
 On first start, the app creates the database `smartrecruit_auth` and a default admin account.
 
