@@ -7,15 +7,13 @@ SmartRecruit AI connects candidates and recruiters. Candidates upload their CV, 
 
 ## Architecture
 
-The project is split into independent services, one folder each:
-
-| Folder | Role | Tech | Port | Status |
-|--------|------|------|------|--------|
-| `frontend/` | Web app | Angular | 4200 | In progress |
-| `backend/` | auth-service: users, login, JWT | Spring Boot 3 (Java 21) | 8081 | Working |
-| `ocr-service/` | Reads a CV PDF and extracts skills, experience, education | Python, FastAPI, Gemini | 8083 | Working |
-| `cv-service/` | Stores the CV files, one per candidate | Spring Boot | 8082 | **Not built yet** |
-| MongoDB | Database | MongoDB Community Server | 27017 | Local install |
+smartrecruit/
+├── backend/smartrecruit/
+│   ├── auth-service/   users, login, JWT (port 8081)
+│   └── cv-service/     CV upload, storage, analysis result (port 8082)
+├── ocr-service/        Python service: PDF to text to structured data (port 8083)
+├── frontend/           Angular web app (port 4200)
+└── README.md
 
 Planned flow: the candidate uploads a PDF, `cv-service` stores it and calls `ocr-service`, the result is saved in MongoDB, and the candidate validates the detected skills.
 For now, the CV page in the front end calls `ocr-service` directly, to show the detected skills. This is temporary.
@@ -37,14 +35,7 @@ For now, the CV page in the front end calls `ocr-service` directly, to show the 
 3. Run `AuthServiceApplication`. The API starts on `http://localhost:8081`.
 4. cv-service (terminal 2) " cd backend\smartrecruit\cv-service
                             .\mvnw.cmd spring-boot:run"
-5. ocr-service (terminal 3) : 
-        cd ocr-service
-        py -3.12 -m venv .venv
-        .\.venv\Scripts\Activate.ps1
-        python -m pip install -r requirements.txt
-        $env:GEMINI_API_KEY = "generate every timeyou want run from this site web : https://aistudio.google.com/api-keys  ##api gemini 
-        $env:GEMINI_MODEL = "gemini-3.8-flash"
-        python -m uvicorn main:app --port 8083
+
 
 
 On first start, the app creates the database `smartrecruit_auth` and a default admin account.
@@ -52,10 +43,15 @@ On first start, the app creates the database `smartrecruit_auth` and a default a
 ### 2. OCR service
 
 ```
-cd ocr-service
-python -m venv venv
-venv\Scripts\activate
-pip install -r requirements.txt
+ cd ocr-service
+        py -3.12 -m venv .venv
+        .\.venv\Scripts\Activate.ps1
+        python -m pip install -r requirements.txt
+        $env:GEMINI_API_KEY = "generate every timeyou want run from this site web : https://aistudio.google.com/api-keys  ##api gemini
+        (Invoke-RestMethod "https://generativelanguage.googleapis.com/v1beta/models?key=$env:GEMINI_API_KEY").models | Where-Object { $_.supportedGenerationMethods -contains "generateContent" -and $_.name -like "*flash*" } | Select-Object -ExpandProperty name 
+        $env:GEMINI_MODEL = "gemini-3.5-flash-lite"
+        $env:GEMINI_FALLBACK_MODELS = "gemini-3.6-flash,gemini-3.7-flash,gemini-3.8-flash"
+        python -m uvicorn main:app --port 8083
 ```
 
 Then set the variables and start it. The syntax depends on your terminal:
