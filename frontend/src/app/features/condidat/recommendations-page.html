@@ -1,0 +1,107 @@
+<header class="bar">
+  <a class="brand" routerLink="/mon-cv">SmartRecruit AI</a>
+  <nav class="navigation" aria-label="Navigation candidat">
+    <a routerLink="/mon-cv">Mon CV</a>
+    <span>{{ auth.user()?.nom }}</span>
+    <button type="button" (click)="auth.logout()">Se déconnecter</button>
+  </nav>
+</header>
+
+<main class="content">
+  <section class="intro">
+    <p class="eyebrow">Votre prochaine opportunité</p>
+    <h1>Offres recommandées</h1>
+    <p class="lead">
+      Comparez vos compétences validées avec les critères de chaque offre.
+      Vous verrez clairement ce qui correspond à votre profil.
+    </p>
+  </section>
+
+  <aside class="sample-notice" aria-label="Données de démonstration">
+    <strong>Mode démonstration</strong>
+    <p>
+      Les offres affichées sont des exemples fictifs pour tester le matching.
+      Ce ne sont pas de vraies offres d’emploi.
+    </p>
+  </aside>
+
+  @if (auth.user()?.role !== 'CANDIDAT') {
+    <section class="message" role="status">
+      <h2>Espace candidat uniquement</h2>
+      <p>Connectez-vous avec un compte candidat pour consulter les recommandations.</p>
+    </section>
+  } @else if (loading()) {
+    <section class="message" role="status" aria-live="polite">
+      <span class="loader" aria-hidden="true"></span>
+      <p>Calcul de vos correspondances…</p>
+    </section>
+  } @else if (error(); as errorMessage) {
+    <section class="message error" role="alert">
+      <h2>Les recommandations ne sont pas disponibles</h2>
+      <p>{{ errorMessage }}</p>
+      @if (errorMessage.startsWith('Validez')) {
+        <a class="secondary-action" routerLink="/mon-cv">Revoir mon CV</a>
+      }
+      <button class="retry" type="button" (click)="loadRecommendations()">Réessayer</button>
+    </section>
+  } @else if (results(); as offers) {
+    @if (offers.length === 0) {
+      <section class="message">
+        <h2>Aucune recommandation pour le moment</h2>
+        <p>Il n’y a pas d’offres à comparer.</p>
+      </section>
+    } @else {
+      <p class="results-count">{{ offers.length }} exemples classés par pertinence</p>
+      <section class="offer-list" aria-label="Résultats du matching">
+        @for (result of offers; track result.offre.id) {
+          <article class="offer-card">
+            <div class="offer-heading">
+              <div>
+                <span class="sample-tag">Offre exemple</span>
+                <h2>{{ result.offre.titre }}</h2>
+              </div>
+              <div class="score" [attr.aria-label]="'Correspondance : ' + result.score + ' pour cent'">
+                <strong>{{ result.score }}%</strong>
+                <span>match</span>
+              </div>
+            </div>
+
+            <div class="score-track" role="progressbar"
+                 [attr.aria-valuenow]="result.score" aria-valuemin="0" aria-valuemax="100"
+                 [attr.aria-label]="'Correspondance pour ' + result.offre.titre">
+              <span [style.width.%]="result.score"></span>
+            </div>
+            <p class="explanation">{{ result.explication }}</p>
+
+            <div class="skill-columns">
+              <section>
+                <h3>Compétences correspondantes <span>{{ result.competencesCorrespondantes.length }}</span></h3>
+                @if (result.competencesCorrespondantes.length) {
+                  <ul class="skills matched">
+                    @for (skill of result.competencesCorrespondantes; track skill) {
+                      <li>{{ skill }}</li>
+                    }
+                  </ul>
+                } @else {
+                  <p class="empty-skills">Aucune correspondance détectée.</p>
+                }
+              </section>
+              <section>
+                <h3>À développer <span>{{ result.competencesManquantes.length }}</span></h3>
+                @if (result.competencesManquantes.length) {
+                  <ul class="skills missing">
+                    @for (skill of result.competencesManquantes; track skill) {
+                      <li>{{ skill }}</li>
+                    }
+                  </ul>
+                } @else {
+                  <p class="empty-skills">Toutes les compétences demandées correspondent.</p>
+                }
+              </section>
+            </div>
+          </article>
+        }
+      </section>
+    }
+  }
+</main>

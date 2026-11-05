@@ -6,6 +6,7 @@ export const routes: Routes = [
   { path: 'inscription', loadComponent: () => import('./features/auth/auth-page').then(m => m.AuthPage), data: { mode: 'register' } },
   { path: 'tableau-de-bord', canActivate: [authGuard], loadComponent: () => import('./features/dashboard/dashboard').then(m => m.Dashboard) },
   { path: 'mon-cv', canActivate: [authGuard], loadComponent: () => import('./features/condidat/cv-page').then(m => m.CvPage) },
+  { path: 'recommandations', canActivate: [authGuard], loadComponent: () => import('./features/condidat/recommendations-page').then(m => m.RecommendationsPage) },
   { path: '', pathMatch: 'full', redirectTo: 'connexion' },
   { path: '**', redirectTo: 'connexion' },
 ];

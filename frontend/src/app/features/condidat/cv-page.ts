@@ -2,6 +2,7 @@ import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { HttpErrorResponse, HttpEventType } from '@angular/common/http';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { RouterLink } from '@angular/router';
 import { switchMap, takeWhile, timer } from 'rxjs';
 import { AuthService } from '../../core/auth.service';
 import { CvService } from '../../core/cv.service';
@@ -12,7 +13,7 @@ const MAX_SIZE = 5 * 1024 * 1024; // 5 Mo
 
 @Component({
   selector: 'app-cv-page',
-  imports: [DatePipe],
+  imports: [DatePipe, RouterLink],
   templateUrl: './cv-page.html',
   styleUrl: './cv-page.css',
 })

@@ -123,6 +123,19 @@ Defaults in `backend/src/main/resources/application.yml` are for local developme
 
 Send the token as `Authorization: Bearer <token>`. You can test with Postman (the `.http` files only run in IntelliJ Ultimate).
 
+### cv-service matching (port 8082)
+
+`POST /api/matching` accepts a JSON array of published offers, each with `id`,
+`titre`, `competencesRequises` (skill-name array), and optional `source` and
+`url`. Send the candidate JWT in the `Authorization: Bearer <token>` header.
+Only candidates can call this endpoint, and the candidate's MongoDB profile must
+be validated. Candidate skills are read from that profile, never from the
+request. The response ranks offers by score and includes matched skills, missing
+skills, and an explanation. Matching is exact after trimming, ignoring case and
+accents; synonyms and Gemini-based AI are deliberately out of scope for this
+first transparent version. Person 2's offer endpoint is not available yet, so
+the frontend integration should wait until published offer data can be loaded.
+
 ### ocr-service (port 8083)
 
 | Method | Endpoint | Description |
@@ -138,6 +151,7 @@ Errors: `400` not a PDF, `422` unreadable PDF, `429` free Gemini limit reached, 
 | `/connexion` | Login |
 | `/inscription` | Registration (candidate or recruiter) |
 | `/mon-cv` | Candidate CV page: choose a PDF (5 MB max), see the detected skills, keep or remove each one |
+| `/recommandations` | Candidate-only matching demo using clearly labeled sample offers |
 | `/tableau-de-bord` | Temporary test page for recruiters and admins |
 
 ## Status
@@ -146,11 +160,12 @@ Errors: `400` not a PDF, `422` unreadable PDF, `429` free Gemini limit reached, 
 - [x] Angular login and register pages
 - [x] OCR service: PDF analysis with Gemini
 - [x] CV page: PDF selection and skills validation (in progress, validation is not saved yet)
+- [x] Matching score API and recommendations page with sample offers for development
 - [ ] cv-service: PDF upload, storage, one CV per candidate, calls the OCR service
 - [ ] Save the validated skills in MongoDB
 - [ ] Job offers: publish (recruiter), browse (candidate)
 - [ ] Applications and status tracking
-- [ ] AI matching between CVs and offers
+- [ ] Integrate matching with persisted validated skills and real published offers
 - [ ] Interview preparation
 - [ ] Role dashboards
 

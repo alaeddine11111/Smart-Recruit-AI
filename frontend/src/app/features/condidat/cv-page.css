@@ -9,6 +9,8 @@
 
 .brand { color: var(--cobalt); font-size: 1.1rem; }
 .who { display: flex; align-items: center; gap: 1rem; }
+.who a { color: var(--cobalt); font-weight: 600; text-decoration: none; }
+.who a:hover { text-decoration: underline; }
 
 .who button {
   font: inherit;

@@ -1,6 +1,7 @@
 <header class="bar">
   <strong class="brand">SmartRecruit AI</strong>
   <div class="who">
+    <a routerLink="/recommandations">Mes recommandations</a>
     <span>{{ auth.user()?.nom }}</span>
     <button type="button" (click)="auth.logout()">Se déconnecter</button>
   </div>

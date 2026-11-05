@@ -53,6 +53,20 @@ export interface Profil {
   experiences: Experience[]; formations: Formation[]; competences: Competence[];
   langues: Langue[]; sections: SectionPerso[]; valide: boolean;
 }
+export interface OffreMatching {
+  id: string;
+  titre: string;
+  competencesRequises: string[];
+  source?: string;
+  url?: string | null;
+}
+export interface ResultatMatching {
+  offre: OffreMatching;
+  score: number;
+  competencesCorrespondantes: string[];
+  competencesManquantes: string[];
+  explication: string;
+}
 export interface AnalyseInfo {
   statut: 'EN_COURS' | 'TERMINEE' | 'ECHEC';
   messageErreur?: string;
