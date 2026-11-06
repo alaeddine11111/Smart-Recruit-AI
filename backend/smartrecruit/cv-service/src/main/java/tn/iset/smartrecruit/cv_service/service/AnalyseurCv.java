@@ -52,7 +52,9 @@ public class AnalyseurCv {
             profils.save(new Profil(
                     ancien == null ? null : ancien.id(), analyse.candidatId(),
                     nz(d.titre()), nz(d.resume()), nz(d.telephone()), nz(d.localisation()),
-                    nz(d.experiences()), nz(d.formations()), nz(d.competences()), nz(d.langues()),
+                    nz(d.experiences()), nz(d.formations()),
+                    ancien == null ? List.of() : ancien.competences(), nz(d.competences()),
+                    ancien == null ? List.of() : nz(ancien.competencesValidees()), nz(d.langues()),
                     ancien == null ? List.of() : ancien.sections(),
                     false, Instant.now()));
 

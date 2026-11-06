@@ -11,7 +11,76 @@
 
   @switch (user()?.role) {
     @case ('CANDIDAT') {
-      <p>Votre espace candidat. Bientôt : déposer votre CV et postuler aux offres.</p>
+      @if (candidateLoading()) {
+        <p class="status" role="status">Chargement de votre profil…</p>
+      } @else if (candidateError()) {
+        <p class="err status" role="alert">{{ candidateError() }}</p>
+      } @else if (candidateProfile(); as profile) {
+        <div class="candidate-heading">
+          <p>Voici les informations enregistrées dans votre profil.</p>
+          <a class="edit-link" routerLink="/mon-cv">Modifier mon profil</a>
+        </div>
+
+        <section class="profile-card" aria-labelledby="personal-heading">
+          <h2 id="personal-heading">Informations personnelles</h2>
+          <dl class="details">
+            <div><dt>Nom</dt><dd>{{ me()?.nom || user()?.nom || 'Non renseigné' }}</dd></div>
+            <div><dt>Email</dt><dd>{{ me()?.email || user()?.email || 'Non renseigné' }}</dd></div>
+            <div><dt>Téléphone</dt><dd>{{ profile.telephone || 'Non renseigné' }}</dd></div>
+            <div><dt>Localisation</dt><dd>{{ profile.localisation || 'Non renseignée' }}</dd></div>
+          </dl>
+        </section>
+
+        <section class="profile-card" aria-labelledby="skills-heading">
+          <h2 id="skills-heading">Compétences validées</h2>
+          <div class="skill-list">
+            @for (skill of profile.competencesValidees ?? []; track $index) {
+              <span class="chip">{{ skill.nom }}{{ skill.categorie ? ' · ' + skill.categorie : '' }}</span>
+            } @empty {
+              <p class="empty">Aucune compétence validée. Vous pouvez les choisir dans votre profil.</p>
+            }
+          </div>
+        </section>
+
+        <section class="profile-card" aria-labelledby="experience-heading">
+          <h2 id="experience-heading">Expériences professionnelles</h2>
+          <div class="record-list">
+            @for (experience of profile.experiences ?? []; track $index) {
+              <article class="record">
+                <h3>{{ experience.poste || 'Poste non renseigné' }}</h3>
+                <p class="record-meta">
+                  {{ experience.entreprise || 'Entreprise non renseignée' }}
+                  @if (experience.dateDebut || experience.dateFin) {
+                    · {{ experience.dateDebut }} – {{ experience.dateFin }}
+                  }
+                </p>
+                @if (experience.description) { <p>{{ experience.description }}</p> }
+              </article>
+            } @empty {
+              <p class="empty">Aucune expérience enregistrée.</p>
+            }
+          </div>
+        </section>
+
+        <section class="profile-card" aria-labelledby="education-heading">
+          <h2 id="education-heading">Formation et éducation</h2>
+          <div class="record-list">
+            @for (formation of profile.formations ?? []; track $index) {
+              <article class="record">
+                <h3>{{ formation.diplome || 'Formation non renseignée' }}</h3>
+                <p class="record-meta">
+                  {{ formation.etablissement || 'Établissement non renseigné' }}
+                  @if (formation.dateDebut || formation.dateFin) {
+                    · {{ formation.dateDebut }} – {{ formation.dateFin }}
+                  }
+                </p>
+              </article>
+            } @empty {
+              <p class="empty">Aucune formation enregistrée.</p>
+            }
+          </div>
+        </section>
+      }
     }
     @case ('RECRUTEUR') {
       <p>Votre espace recruteur. Bientôt : publier des offres et suivre les candidatures.</p>
@@ -21,8 +90,10 @@
     }
   }
 
-  <h2>Réponse de /api/auth/me</h2>
-  <pre>{{ me() | json }}</pre>
+  @if (user()?.role !== 'CANDIDAT') {
+    <h2>Réponse de /api/auth/me</h2>
+    <pre>{{ me() | json }}</pre>
+  }
 
   @if (users(); as list) {
     <h2>Utilisateurs</h2>

@@ -9,6 +9,8 @@
 
 .brand { color: var(--cobalt); font-size: 1.1rem; }
 .who { display: flex; align-items: center; gap: 1rem; }
+.dashboard-link { color: var(--cobalt); font-weight: 600; text-decoration: none; }
+.dashboard-link:hover { text-decoration: underline; }
 
 .who button {
   font: inherit;
@@ -172,3 +174,65 @@ mark {
 .result { grid-column: 1 / -1; margin-top: 2rem; }
 .chip { display: inline-block; padding: 2px 10px; margin: 2px; border: 1px solid #99a; border-radius: 12px; }
 pre { white-space: pre-wrap; max-height: 300px; overflow: auto; }
+
+.profile-editor {
+  grid-column: 1 / -1;
+  padding: 1.5rem;
+  background: var(--paper);
+  border: 1.5px solid var(--line);
+  border-radius: 14px;
+}
+
+.profile-editor > h2 { margin: 0 0 0.25rem; font-size: 1.6rem; }
+.profile-editor > .hint { margin-bottom: 1rem; }
+.editor-section { padding-top: 1.25rem; margin-top: 1.25rem; border-top: 1px solid var(--line); }
+.editor-section h3 { margin: 0 0 0.9rem; font-size: 1.15rem; }
+.editor-section h4 { margin: 1rem 0 0.5rem; }
+.skill-list { display: flex; flex-wrap: wrap; gap: 0.6rem; margin: 0.5rem 0 1rem; }
+.skill-option { display: inline-flex; align-items: center; gap: 0.45rem; padding: 0.5rem 0.7rem; border: 1px solid var(--line); border-radius: 8px; }
+.profile-editor .skill-option input { width: auto; }
+.validated-skills { min-height: 1.5rem; }
+.form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+.form-grid label { display: grid; gap: 0.35rem; font-weight: 600; }
+.field-wide { grid-column: 1 / -1; }
+.profile-editor input, .profile-editor textarea {
+  width: 100%;
+  padding: 0.7rem 0.8rem;
+  border: 1.5px solid var(--line);
+  border-radius: 8px;
+  color: var(--ink);
+  background: var(--paper);
+  font: inherit;
+}
+.profile-editor textarea { resize: vertical; }
+.profile-editor input:focus, .profile-editor textarea:focus { border-color: var(--cobalt); outline: none; }
+.editor-submit { margin-top: 1rem; }
+.section-heading { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
+.section-heading .ghost { padding: 0.55rem 0.8rem; }
+.record-list { display: grid; gap: 0.75rem; }
+.record {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+.record h4, .editor-form h4 { margin: 0 0 0.25rem; }
+.record p { margin: 0.15rem 0; }
+.record p span { color: #4a5877; }
+.record-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.record-actions .submit, .record-actions .ghost { padding: 0.55rem 0.8rem; }
+.danger-action { color: var(--berry); border-color: #e7b6c7; }
+.editor-form { padding: 1rem; margin-top: 1rem; background: var(--chalk); border-radius: 10px; }
+.editor-form .record-actions { margin-top: 1rem; }
+.profile-message { margin: 0.8rem 0; }
+.success { color: #197044; }
+
+@media (max-width: 600px) {
+  .profile-editor { padding: 1rem; }
+  .form-grid { grid-template-columns: 1fr; }
+  .field-wide { grid-column: auto; }
+  .section-heading, .record { align-items: stretch; flex-direction: column; }
+}
