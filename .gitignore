@@ -23,3 +23,9 @@
 __pycache__/
 uploads/
 start.ps1
+run.log
+**/target/
+**/node_modules/
+.angular/
+**/.venv/
+**/uploads/
