@@ -18,7 +18,10 @@
       } @else if (candidateProfile(); as profile) {
         <div class="candidate-heading">
           <p>Voici les informations enregistrées dans votre profil.</p>
-          <a class="edit-link" routerLink="/mon-cv">Modifier mon profil</a>
+          <nav class="candidate-actions" aria-label="Espace candidat">
+            <a class="edit-link" routerLink="/offres">Consulter les offres d’emploi</a>
+            <a class="edit-link" routerLink="/mon-cv">Modifier mon profil</a>
+          </nav>
         </div>
 
         <section class="profile-card" aria-labelledby="personal-heading">
@@ -83,7 +86,12 @@
       }
     }
     @case ('RECRUTEUR') {
-      <p>Votre espace recruteur. Bientôt : publier des offres et suivre les candidatures.</p>
+      <p>Gérez votre entreprise et vos offres d’emploi.</p>
+      <nav class="recruiter-actions" aria-label="Espace recruteur">
+        <a class="edit-link" routerLink="/recruteur/entreprise">Profil de l’entreprise</a>
+        <a class="edit-link" routerLink="/recruteur/offres">Mes offres</a>
+        <a class="edit-link" routerLink="/recruteur/offres/new">Publier une offre</a>
+      </nav>
     }
     @case ('ADMIN') {
       <p>Votre espace administrateur. Voici les comptes de la plateforme.</p>
