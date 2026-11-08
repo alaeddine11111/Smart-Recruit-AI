@@ -12,6 +12,6 @@ export const RECRUITER_ROUTES: Routes = [
 // 'externes' must stay before ':id'
 export const CANDIDATE_ROUTES: Routes = [
   { path: '', canActivate: [authGuard], loadComponent: () => import('./candidat/offer-browse.component').then(m => m.OfferBrowseComponent) },
-  { path: 'externes', canActivate: [authGuard], loadComponent: () => import('./candidat/external-offers.component').then(m => m.ExternalOffersComponent) },
+  { path: 'externes', loadComponent: () => import('./candidat/external-offers.component').then(m => m.ExternalOffersComponent) },
   { path: ':id', canActivate: [authGuard], loadComponent: () => import('./candidat/offer-detail.component').then(m => m.OfferDetailComponent) },
 ];

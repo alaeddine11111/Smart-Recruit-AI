@@ -30,9 +30,10 @@ public class SecurityConfig {
             .authorizeHttpRequests(a -> a
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 .requestMatchers("/error").permitAll()
+                .requestMatchers("/api/offres-externes/**").permitAll()
                 // ---- Offers module ----
                 .requestMatchers("/api/recruteur/**").hasAnyRole("RECRUTEUR", "ADMIN")
-                .requestMatchers("/api/offres/**", "/api/offres-externes/**", "/api/entreprises/**")
+                .requestMatchers("/api/offres/**", "/api/entreprises/**")
                     .hasAnyRole("CANDIDAT", "RECRUTEUR", "ADMIN")
                 // ---- everything else is closed ----
                 .anyRequest().denyAll())
