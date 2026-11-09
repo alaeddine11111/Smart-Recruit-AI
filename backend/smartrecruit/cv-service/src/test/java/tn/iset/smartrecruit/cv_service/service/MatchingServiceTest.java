@@ -57,7 +57,7 @@ class MatchingServiceTest {
                 .map(nom -> new Profil.Competence(nom, ""))
                 .toList();
         return new Profil("profile-id", "candidate-id", "", "", "", "",
-                List.of(), List.of(), liste, List.of(), List.of(), true, null);
+                List.of(), List.of(), List.of(), List.of(), liste, List.of(), List.of(), true, null);
     }
 
     private OffreMatchingRequest offre(String... competences) {

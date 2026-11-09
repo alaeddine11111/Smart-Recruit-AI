@@ -1,0 +1,35 @@
+server:
+  port: 8084
+  error:
+    include-message: always
+
+spring:
+  application:
+    name: offer-service
+  data:
+    mongodb:
+      uri: ${MONGODB_URI:mongodb://localhost:27017/smartrecruit_offers}
+      auto-index-creation: true
+  cache:
+    type: simple
+
+app:
+  jwt:
+    secret: ${JWT_SECRET:85ZcnqJvaih2oDxHpJX6eug/UyniFgZKuf8v6BSVuk80e+p5xZNM0CszbJQCZ913}
+    expiration-ms: 86400000
+  cors:
+    allowed-origins: http://localhost:4200
+
+external-jobs:
+  jooble:
+    enabled: false
+    api-key: ${JOOBLE_API_KEY:}
+  arbeitnow:
+    enabled: true
+  remotive:
+    enabled: true
+  adzuna:
+    enabled: false
+    app-id: ${ADZUNA_APP_ID:}
+    app-key: ${ADZUNA_APP_KEY:}
+    country: fr

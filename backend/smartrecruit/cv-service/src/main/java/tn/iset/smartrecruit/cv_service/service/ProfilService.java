@@ -21,15 +21,18 @@ public class ProfilService {
     public Profil enregistrer(String candidatId, Profil in, boolean valide) {
         Profil p = get(candidatId);
         return profils.save(new Profil(p.id(), candidatId, in.titre(), in.resume(), in.telephone(),
-                in.localisation(), nz(in.experiences()), nz(in.formations()), nz(in.competences()),
+                in.localisation(), nz(in.experiences()), nz(in.formations()), p.competences(),
+                p.competencesDetectees(), in.competencesValidees() == null
+                        ? p.competencesValidees() : nz(in.competencesValidees()),
                 nz(in.langues()), nz(in.sections()), valide, Instant.now()));
     }
 
     public Profil valider(String candidatId) {
         Profil p = get(candidatId);
         return profils.save(new Profil(p.id(), candidatId, p.titre(), p.resume(), p.telephone(),
-                p.localisation(), p.experiences(), p.formations(), p.competences(), p.langues(),
-                p.sections(), true, Instant.now()));
+                p.localisation(), p.experiences(), p.formations(), p.competences(),
+                p.competencesDetectees(), p.competencesValidees(), p.langues(), p.sections(),
+                true, Instant.now()));
     }
 
     private static <T> List<T> nz(List<T> l) { return l == null ? List.of() : l; }

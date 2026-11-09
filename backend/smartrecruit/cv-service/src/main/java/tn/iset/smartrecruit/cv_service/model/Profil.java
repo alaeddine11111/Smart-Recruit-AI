@@ -13,7 +13,9 @@ public record Profil(
         @Indexed(unique = true) String candidatId,
         String titre, String resume, String telephone, String localisation,
         List<Experience> experiences, List<Formation> formations,
-        List<Competence> competences, List<Langue> langues, List<SectionPerso> sections,
+        // Legacy skills have no reliable provenance; keep them separate from reviewed skills.
+        List<Competence> competences, List<Competence> competencesDetectees,
+        List<Competence> competencesValidees, List<Langue> langues, List<SectionPerso> sections,
         boolean valide, Instant misAJourLe) {
 
     public record Experience(String poste, String entreprise, String dateDebut, String dateFin, String description) {}
@@ -24,6 +26,6 @@ public record Profil(
 
     public static Profil vide(String candidatId) {
         return new Profil(null, candidatId, "", "", "", "", List.of(), List.of(), List.of(),
-                List.of(), List.of(), false, Instant.now());
+                List.of(), List.of(), List.of(), List.of(), false, Instant.now());
     }
 }

@@ -16,7 +16,7 @@ import java.util.Set;
 public class MatchingService {
 
     public ResultatMatching evaluer(Profil profil, OffreMatchingRequest offre) {
-        Set<String> competencesCandidat = indexer(profil.competences());
+        Set<String> competencesCandidat = indexer(profil.competencesValidees());
         Set<String> competencesDejaTraitees = new HashSet<>();
         List<String> correspondantes = new ArrayList<>();
         List<String> manquantes = new ArrayList<>();
@@ -53,6 +53,9 @@ public class MatchingService {
 
     private Set<String> indexer(List<Profil.Competence> competences) {
         Set<String> index = new HashSet<>();
+        if (competences == null) {
+            return index;
+        }
         if (competences == null) {
             return index;
         }

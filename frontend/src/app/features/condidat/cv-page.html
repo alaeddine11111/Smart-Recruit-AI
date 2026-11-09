@@ -3,6 +3,7 @@
   <div class="who">
     <a routerLink="/recommandations">Mes recommandations</a>
     <span>{{ auth.user()?.nom }}</span>
+    <a class="dashboard-link" routerLink="/tableau-de-bord">Mon tableau de bord</a>
     <button type="button" (click)="auth.logout()">Se déconnecter</button>
   </div>
 </header>
@@ -65,6 +66,224 @@
       }
     </div>
   </section>
+  <section class="profile-editor" aria-labelledby="profile-heading">
+    <h2 id="profile-heading">Mon profil</h2>
+    <p class="hint">Complétez vos informations et gérez vos expériences et formations.</p>
+
+    @if (profileLoading()) {
+      <p class="hint" role="status">Chargement du profil…</p>
+    } @else if (profil(); as p) {
+      @if (profileError()) {
+        <p class="err profile-message" role="alert">{{ profileError() }}</p>
+      }
+      @if (profileSuccess()) {
+        <p class="success profile-message" role="status">{{ profileSuccess() }}</p>
+      }
+
+      <form class="editor-section" (ngSubmit)="savePersonalInfo()">
+        <h3>Informations personnelles</h3>
+        <div class="form-grid">
+          <label>
+            Titre professionnel
+            <input name="titre" [(ngModel)]="personalDraft.titre" maxlength="120">
+          </label>
+          <label>
+            Téléphone
+            <input name="telephone" [(ngModel)]="personalDraft.telephone" type="tel" maxlength="40">
+          </label>
+          <label>
+            Localisation
+            <input name="localisation" [(ngModel)]="personalDraft.localisation" maxlength="120">
+          </label>
+          <label class="field-wide">
+            Résumé
+            <textarea name="resume" [(ngModel)]="personalDraft.resume" rows="4" maxlength="3000"></textarea>
+          </label>
+        </div>
+        <button class="submit editor-submit" type="submit" [disabled]="profileSaving()">
+          {{ profileSaving() ? 'Enregistrement…' : 'Enregistrer mes informations' }}
+        </button>
+      </form>
+
+      <section class="editor-section" aria-labelledby="skills-heading">
+        <h3 id="skills-heading">Compétences du CV</h3>
+        <p class="hint">Les compétences détectées ne sont pas validées tant que vous ne les acceptez pas.</p>
+
+        @if (skillsError()) {
+          <p class="err profile-message" role="alert">{{ skillsError() }}</p>
+        }
+        @if (skillsSuccess()) {
+          <p class="success profile-message" role="status">{{ skillsSuccess() }}</p>
+        }
+
+        <h4>Détectées par l’analyse du CV</h4>
+        <div class="skill-list">
+          @for (skill of p.competencesDetectees ?? []; track $index) {
+            <label class="skill-option">
+              <input type="checkbox" [checked]="isSkillSelected(skill)" (change)="toggleSkill(skill)">
+              <span>{{ skill.nom }}{{ skill.categorie ? ' · ' + skill.categorie : '' }}</span>
+            </label>
+          } @empty {
+            <p class="hint">Aucune compétence détectée pour le moment.</p>
+          }
+        </div>
+
+        @if (legacySkills(p).length) {
+          <h4>Anciennes compétences à vérifier</h4>
+          <p class="hint">
+            Leur origine n’est pas enregistrée. Elles ne sont pas considérées comme validées.
+            Cochez uniquement celles que vous confirmez.
+          </p>
+          <div class="skill-list">
+            @for (skill of legacySkills(p); track $index) {
+              <label class="skill-option">
+                <input type="checkbox" [checked]="isSkillSelected(skill)" (change)="toggleSkill(skill)">
+                <span>{{ skill.nom }}{{ skill.categorie ? ' · ' + skill.categorie : '' }}</span>
+              </label>
+            }
+          </div>
+        }
+
+        <h4>Compétences validées</h4>
+        <div class="skill-list validated-skills">
+          @for (skill of p.competencesValidees ?? []; track $index) {
+            <label class="skill-option">
+              <input type="checkbox" [checked]="isSkillSelected(skill)" (change)="toggleSkill(skill)">
+              <span>{{ skill.nom }}{{ skill.categorie ? ' · ' + skill.categorie : '' }}</span>
+            </label>
+          } @empty {
+            <p class="hint">Aucune compétence validée.</p>
+          }
+        </div>
+        <button class="submit editor-submit" type="button" (click)="saveSkills()"
+                [disabled]="profileSaving() || skillsSaving()">
+          {{ skillsSaving() ? 'Enregistrement…' : 'Enregistrer mes compétences' }}
+        </button>
+      </section>
+
+      <section class="editor-section" aria-labelledby="experience-heading">
+        <div class="section-heading">
+          <h3 id="experience-heading">Expériences professionnelles</h3>
+          @if (!experienceFormOpen()) {
+            <button class="ghost" type="button" (click)="startExperience()" [disabled]="profileSaving()">
+              Ajouter une expérience
+            </button>
+          }
+        </div>
+
+        <div class="record-list">
+          @for (experience of p.experiences ?? []; track $index) {
+            <article class="record">
+              <div>
+                <h4>{{ experience.poste || 'Poste non renseigné' }}</h4>
+                <p>{{ experience.entreprise }}<span>{{ experience.entreprise && (experience.dateDebut || experience.dateFin) ? ' · ' : '' }}{{ experience.dateDebut }}{{ experience.dateDebut || experience.dateFin ? ' – ' : '' }}{{ experience.dateFin }}</span></p>
+                @if (experience.description) { <p>{{ experience.description }}</p> }
+              </div>
+              <div class="record-actions">
+                <button class="ghost" type="button" (click)="editExperience($index)" [disabled]="profileSaving()">Modifier</button>
+                <button class="ghost danger-action" type="button" (click)="removeExperience($index)" [disabled]="profileSaving()">Supprimer</button>
+              </div>
+            </article>
+          } @empty {
+            <p class="hint">Aucune expérience enregistrée.</p>
+          }
+        </div>
+
+        @if (experienceFormOpen()) {
+          <form class="editor-form" (ngSubmit)="saveExperience()">
+            <h4>{{ editingExperienceIndex() === null ? 'Ajouter une expérience' : 'Modifier l’expérience' }}</h4>
+            <div class="form-grid">
+              <label>
+                Poste
+                <input name="experiencePoste" [(ngModel)]="experienceDraft.poste" required maxlength="120">
+              </label>
+              <label>
+                Entreprise
+                <input name="experienceEntreprise" [(ngModel)]="experienceDraft.entreprise" maxlength="120">
+              </label>
+              <label>
+                Date de début
+                <input name="experienceDateDebut" [(ngModel)]="experienceDraft.dateDebut" placeholder="AAAA-MM">
+              </label>
+              <label>
+                Date de fin
+                <input name="experienceDateFin" [(ngModel)]="experienceDraft.dateFin" placeholder="AAAA-MM ou Présent">
+              </label>
+              <label class="field-wide">
+                Description
+                <textarea name="experienceDescription" [(ngModel)]="experienceDraft.description" rows="3" maxlength="2000"></textarea>
+              </label>
+            </div>
+            <div class="record-actions">
+              <button class="submit" type="submit" [disabled]="profileSaving()">
+                {{ profileSaving() ? 'Enregistrement…' : 'Enregistrer' }}
+              </button>
+              <button class="ghost" type="button" (click)="cancelExperience()" [disabled]="profileSaving()">Annuler</button>
+            </div>
+          </form>
+        }
+      </section>
+
+      <section class="editor-section" aria-labelledby="formation-heading">
+        <div class="section-heading">
+          <h3 id="formation-heading">Formation et éducation</h3>
+          @if (!formationFormOpen()) {
+            <button class="ghost" type="button" (click)="startFormation()" [disabled]="profileSaving()">
+              Ajouter une formation
+            </button>
+          }
+        </div>
+
+        <div class="record-list">
+          @for (formation of p.formations ?? []; track $index) {
+            <article class="record">
+              <div>
+                <h4>{{ formation.diplome || 'Diplôme non renseigné' }}</h4>
+                <p>{{ formation.etablissement }}<span>{{ formation.etablissement && (formation.dateDebut || formation.dateFin) ? ' · ' : '' }}{{ formation.dateDebut }}{{ formation.dateDebut || formation.dateFin ? ' – ' : '' }}{{ formation.dateFin }}</span></p>
+              </div>
+              <div class="record-actions">
+                <button class="ghost" type="button" (click)="editFormation($index)" [disabled]="profileSaving()">Modifier</button>
+                <button class="ghost danger-action" type="button" (click)="removeFormation($index)" [disabled]="profileSaving()">Supprimer</button>
+              </div>
+            </article>
+          } @empty {
+            <p class="hint">Aucune formation enregistrée.</p>
+          }
+        </div>
+
+        @if (formationFormOpen()) {
+          <form class="editor-form" (ngSubmit)="saveFormation()">
+            <h4>{{ editingFormationIndex() === null ? 'Ajouter une formation' : 'Modifier la formation' }}</h4>
+            <div class="form-grid">
+              <label>
+                Diplôme ou formation
+                <input name="formationDiplome" [(ngModel)]="formationDraft.diplome" required maxlength="160">
+              </label>
+              <label>
+                Établissement
+                <input name="formationEtablissement" [(ngModel)]="formationDraft.etablissement" maxlength="160">
+              </label>
+              <label>
+                Date de début
+                <input name="formationDateDebut" [(ngModel)]="formationDraft.dateDebut" placeholder="AAAA-MM">
+              </label>
+              <label>
+                Date de fin
+                <input name="formationDateFin" [(ngModel)]="formationDraft.dateFin" placeholder="AAAA-MM ou Présent">
+              </label>
+            </div>
+            <div class="record-actions">
+              <button class="submit" type="submit" [disabled]="profileSaving()">
+                {{ profileSaving() ? 'Enregistrement…' : 'Enregistrer' }}
+              </button>
+              <button class="ghost" type="button" (click)="cancelFormation()" [disabled]="profileSaving()">Annuler</button>
+            </div>
+          </form>
+        }
+      </section>
+    }
+  </section>
+
     @if (analyse(); as a) {
     <section class="result">
       @if (a.statut === 'EN_COURS') {
@@ -85,8 +304,8 @@
         <p><strong>Localisation :</strong> {{ p.localisation || '-' }}</p>
         <p><strong>Résumé :</strong> {{ p.resume || '-' }}</p>
 
-        <h3>Compétences</h3>
-        @for (c of p.competences; track $index) { <span class="chip">{{ c.nom }}</span> }
+        <h3>Compétences détectées</h3>
+        @for (c of p.competencesDetectees ?? []; track $index) { <span class="chip">{{ c.nom }}</span> }
         @empty { <p>Aucune détectée.</p> }
 
         <h3>Expériences</h3>

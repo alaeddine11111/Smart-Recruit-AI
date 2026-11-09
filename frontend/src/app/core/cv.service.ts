@@ -11,7 +11,7 @@ export class CvService {
 
   /** The candidate's current CV, or null if none yet (the backend answers 404). */
   current(): Observable<CvInfo | null> {
-    return this.http.get<CvInfo>(`${CV_API}/me`).pipe(
+    return this.http.get<CvInfo>(CV_API).pipe(
       catchError((e: HttpErrorResponse) => (e.status === 404 ? of(null) : throwError(() => e))),
     );
   }

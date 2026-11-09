@@ -51,6 +51,7 @@ export interface SectionPerso { id: string; titre: string; elements: string[]; }
 export interface Profil {
   titre: string; resume: string; telephone: string; localisation: string;
   experiences: Experience[]; formations: Formation[]; competences: Competence[];
+  competencesDetectees?: Competence[]; competencesValidees?: Competence[];
   langues: Langue[]; sections: SectionPerso[]; valide: boolean;
 }
 export interface OffreMatching {
