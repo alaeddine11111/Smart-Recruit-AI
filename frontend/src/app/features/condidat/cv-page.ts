@@ -101,6 +101,7 @@ export class CvPage {
     this.skillsError.set(null);
     this.skillsSuccess.set(null);
     this.profilService.save({ ...profil, competencesValidees }).pipe(
+      switchMap(() => this.profilService.valider()),
       takeUntilDestroyed(this.destroyRef),
     ).subscribe({
       next: saved => {

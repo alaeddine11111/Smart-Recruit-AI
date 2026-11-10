@@ -60,6 +60,9 @@ export interface OffreMatching {
   competencesRequises: string[];
   source?: string;
   url?: string | null;
+  entreprise?: string;
+  localisation?: string;
+  description?: string;
 }
 export interface ResultatMatching {
   offre: OffreMatching;

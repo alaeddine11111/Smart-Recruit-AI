@@ -56,9 +56,6 @@ public class MatchingService {
         if (competences == null) {
             return index;
         }
-        if (competences == null) {
-            return index;
-        }
         for (Profil.Competence competence : competences) {
             if (competence != null) {
                 String cle = normaliser(competence.nom());

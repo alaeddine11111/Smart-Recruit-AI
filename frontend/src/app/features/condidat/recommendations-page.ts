@@ -1,10 +1,14 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { finalize } from 'rxjs';
+import { EMPTY, Observable, catchError, expand, finalize, map, of, reduce, switchMap } from 'rxjs';
 import { AuthService } from '../../core/auth.service';
 import { MatchingService } from '../../core/matching.service';
-import { ResultatMatching } from '../../core/models';
+import { OffreExterneService } from '../../core/offre-externe.service';
+import { OffreService } from '../../core/offre.service';
+import { ProfilService } from '../../core/profil.service';
+import { OffreEmploi, PageResponse } from '../../core/offers.models';
+import { Competence, OffreMatching, Profil, ResultatMatching } from '../../core/models';
 
 @Component({
   selector: 'app-recommendations-page',
@@ -15,10 +19,15 @@ import { ResultatMatching } from '../../core/models';
 export class RecommendationsPage {
   readonly auth = inject(AuthService);
   private matchingService = inject(MatchingService);
+  private readonly profileService = inject(ProfilService);
+  private readonly offerService = inject(OffreService);
+  private readonly externalOffers = inject(OffreExterneService);
 
   readonly results = signal<ResultatMatching[] | null>(null);
   readonly loading = signal(false);
   readonly error = signal<string | null>(null);
+  readonly externalNotice = signal<string | null>(null);
+  readonly unscoredExternalCount = signal(0);
 
   constructor() {
     if (this.auth.user()?.role === 'CANDIDAT') {
@@ -31,9 +40,31 @@ export class RecommendationsPage {
 
     this.loading.set(true);
     this.error.set(null);
+    this.externalNotice.set(null);
+    this.unscoredExternalCount.set(0);
     this.results.set(null);
 
-    this.matchingService.evaluer().pipe(
+    this.profileService.profil().pipe(
+      switchMap(profile => {
+        if (!profile.valide) {
+          this.error.set('Validez d’abord vos compétences dans Mon CV. Les recommandations seront disponibles ensuite.');
+          return EMPTY;
+        }
+        if (!profile.competencesValidees?.length) {
+          this.error.set('Sélectionnez et enregistrez au moins une compétence dans Mon CV pour obtenir des recommandations.');
+          return EMPTY;
+        }
+
+        return this.loadPublishedOffers().pipe(
+          switchMap(internalOffers => this.loadExternalOffers(profile).pipe(
+            map(externalOffers => [
+              ...internalOffers.map(offer => this.matchingService.internalOffer(offer)),
+              ...externalOffers,
+            ]),
+          )),
+          switchMap(offers => offers.length ? this.matchingService.evaluer(offers) : of([])),
+        );
+      }),
       finalize(() => this.loading.set(false)),
     ).subscribe({
       next: results => this.results.set(results),
@@ -41,9 +72,48 @@ export class RecommendationsPage {
     });
   }
 
+  private loadPublishedOffers(): Observable<OffreEmploi[]> {
+    const firstPage = 0;
+    const pageSize = 100;
+    return this.offerService.search({}, firstPage, pageSize).pipe(
+      expand((page: PageResponse<OffreEmploi>) =>
+        page.page + 1 < page.totalPages
+          ? this.offerService.search({}, page.page + 1, pageSize)
+          : EMPTY,
+      ),
+      reduce((offers, page) => offers.concat(page.content), [] as OffreEmploi[]),
+    );
+  }
+
+  private loadExternalOffers(profile: Profil): Observable<OffreMatching[]> {
+    const skills = (profile.competencesValidees ?? [])
+      .map((skill: Competence) => skill.nom.trim())
+      .filter(Boolean);
+    if (skills.length === 0) {
+      return of([]);
+    }
+
+    return this.externalOffers.search(skills.slice(0, 5).join(' '), profile.localisation ?? '').pipe(
+      map(external => {
+        const offers = external
+          .map(offer => this.matchingService.externalOffer(offer))
+          .filter((offer): offer is OffreMatching => offer !== null);
+        const unscoredCount = external.length - offers.length;
+        if (unscoredCount > 0) {
+          this.unscoredExternalCount.set(unscoredCount);
+        }
+        return offers;
+      }),
+      catchError(() => {
+        this.externalNotice.set('Les offres externes sont temporairement indisponibles. Les offres internes restent affichées.');
+        return of([]);
+      }),
+    );
+  }
+
   private messageFor(error: HttpErrorResponse): string {
     if (error.status === 0) {
-      return 'Le service CV ne répond pas. Vérifiez que le cv-service fonctionne sur le port 8082.';
+      return 'Impossible de joindre un service nécessaire. Vérifiez que le CV service (8082) et le service des offres (8084) sont lancés.';
     }
     if (error.status === 401) {
       return 'Votre session a expiré. Reconnectez-vous pour consulter vos recommandations.';
@@ -56,4 +126,5 @@ export class RecommendationsPage {
     }
     return error.error?.message ?? 'Impossible de calculer les recommandations. Réessayez.';
   }
+
 }

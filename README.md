@@ -53,7 +53,16 @@ cd backend\smartrecruit\cv-service
 
 The CV API starts at `http://localhost:8082`. Installed Maven can also be used with `mvn spring-boot:run`.
 
-### 3. OCR service
+### 3. Offers service
+
+**Offers — port 8084:**
+
+```powershell
+cd C:\Users\turbo\Smart-Recruit-AI\backend\smartrecruit\offer-service
+.\mvnw.cmd spring-boot:run
+```
+
+### 4. OCR service
 
 In PowerShell:
 
@@ -69,7 +78,7 @@ python -m uvicorn main:app --reload --port 8083
 
 The key and model variables apply only to that terminal session. The OCR service defaults to `gemini-3.8-flash` if `GEMINI_MODEL` is not set. Its interactive API docs are at `http://localhost:8083/docs`.
 
-### 4. Front end
+### 5. Front end
 
 ```bash
 cd frontend
@@ -77,7 +86,7 @@ npm install
 ng serve
 ```
 
-Open `http://localhost:4200`. Keep the auth, CV, OCR and frontend services running in their respective terminals.
+Open `http://localhost:4200`. Keep the auth, CV, offers, OCR and frontend services running in their respective terminals.
 
 ### Configuration
 
@@ -143,17 +152,20 @@ MongoDB stores CV metadata in `cvs`, profile data in `profils`, and OCR analysis
 
 ### cv-service matching (port 8082)
 
-`POST /api/matching` accepts a JSON array of published offers, each with `id`,
-`titre`, `competencesRequises` (skill-name array), and optional `source` and
-`url`. Send the candidate JWT in the `Authorization: Bearer <token>` header.
+`POST /api/matching` accepts a JSON array of offers, each with `id`, `titre`,
+`competencesRequises` (skill-name array), and optional `source`, `url`,
+`entreprise`, `localisation` and `description`. Send the candidate JWT in the
+`Authorization: Bearer <token>` header.
 Only candidates can call this endpoint, and the candidate's MongoDB profile must
 be validated. Candidate skills are read from that profile, never from the
-request. The response ranks offers by score and includes matched skills, missing
+request, and at least one validated skill is required. The response ranks offers by score and includes matched skills, missing
 skills, and an explanation. Matching is exact after trimming, ignoring case and
 accents; synonyms and Gemini-based AI are deliberately out of scope for this
-first transparent version. The endpoint accepts offers supplied by its caller.
-The recommendations page still uses clearly labeled sample offers; connecting
-it to the published offers in `offer-service` remains to be done.
+first transparent version. The recommendations page loads published internal
+offers from `offer-service` and searches external listings using the candidate's
+validated skills and location. External scores use recognized technology terms
+found in each listing's title and description, not employer-confirmed
+requirements. Listings with no recognized technology terms are not scored.
 
 ### ocr-service (port 8083)
 
@@ -169,7 +181,7 @@ Errors: `400` not a PDF, `422` unreadable PDF, `429` free Gemini limit reached, 
 |-------|-------------|
 | `/connexion` | Login |
 | `/inscription` | Registration (candidate or recruiter) |
-| `/recommandations` | Candidate-only matching demo using clearly labeled sample offers |
+| `/recommandations` | Candidate recommendations ranked against published internal and external offers |
 | `/mon-cv` | Candidate CV page: upload a PDF, review detected skills, save validated skills, and edit profile information |
 | `/tableau-de-bord` | Candidate dashboard with saved profile, validated skills, experience and education; recruiter/admin workspace |
 | `/offres` | Browse published internal offers |
@@ -185,10 +197,9 @@ Errors: `400` not a PDF, `422` unreadable PDF, `429` free Gemini limit reached, 
 - [x] Candidate review and persistence of validated skills
 - [x] Candidate dashboard for saved profile information
 - [x] Company and job-offer service with candidate browsing and recruiter management
-- [x] Matching score API and recommendations page with sample offers for development
+- [x] Matching score API and recommendations page integrated with published internal offers and external listings
 - [x] Job offers: publish (recruiter), browse (candidate)
 - [ ] Applications and status tracking
-- [ ] Integrate matching recommendations with real published offers
 - [ ] Interview preparation
 - [ ] Recruiter and administrator dashboards
 

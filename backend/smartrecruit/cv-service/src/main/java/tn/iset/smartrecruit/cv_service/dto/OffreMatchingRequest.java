@@ -7,5 +7,8 @@ public record OffreMatchingRequest(
         String titre,
         String source,
         String url,
-        List<String> competencesRequises) {
+        List<String> competencesRequises,
+        String entreprise,
+        String localisation,
+        String description) {
 }

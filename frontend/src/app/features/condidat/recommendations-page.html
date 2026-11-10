@@ -2,6 +2,7 @@
   <a class="brand" routerLink="/mon-cv">SmartRecruit AI</a>
   <nav class="navigation" aria-label="Navigation candidat">
     <a routerLink="/mon-cv">Mon CV</a>
+    <a routerLink="/offres">Toutes les offres</a>
     <span>{{ auth.user()?.nom }}</span>
     <button type="button" (click)="auth.logout()">Se déconnecter</button>
   </nav>
@@ -17,13 +18,23 @@
     </p>
   </section>
 
-  <aside class="sample-notice" aria-label="Données de démonstration">
-    <strong>Mode démonstration</strong>
+  <aside class="sample-notice" aria-label="Comment les scores sont calculés">
+    <strong>À propos des scores</strong>
     <p>
-      Les offres affichées sont des exemples fictifs pour tester le matching.
-      Ce ne sont pas de vraies offres d’emploi.
+      Les offres internes sont comparées à leurs compétences demandées. Pour les offres externes,
+      le score compare les compétences techniques détectées dans le texte de l’annonce : ce ne sont
+      pas nécessairement les exigences officielles de l’employeur.
     </p>
   </aside>
+
+  @if (externalNotice(); as notice) {
+    <p class="notice" role="status">{{ notice }}</p>
+  }
+  @if (unscoredExternalCount() > 0) {
+    <p class="notice" role="status">
+      {{ unscoredExternalCount() }} offre(s) externe(s) n’avaient pas de compétence technique reconnue et ne sont pas incluses dans les scores.
+    </p>
+  }
 
   @if (auth.user()?.role !== 'CANDIDAT') {
     <section class="message" role="status">
@@ -39,7 +50,7 @@
     <section class="message error" role="alert">
       <h2>Les recommandations ne sont pas disponibles</h2>
       <p>{{ errorMessage }}</p>
-      @if (errorMessage.startsWith('Validez')) {
+      @if (errorMessage.startsWith('Validez') || errorMessage.includes('Mon CV')) {
         <a class="secondary-action" routerLink="/mon-cv">Revoir mon CV</a>
       }
       <button class="retry" type="button" (click)="loadRecommendations()">Réessayer</button>
@@ -51,14 +62,20 @@
         <p>Il n’y a pas d’offres à comparer.</p>
       </section>
     } @else {
-      <p class="results-count">{{ offers.length }} exemples classés par pertinence</p>
+      <p class="results-count">{{ offers.length }} offres classées par pertinence</p>
       <section class="offer-list" aria-label="Résultats du matching">
         @for (result of offers; track result.offre.id) {
           <article class="offer-card">
             <div class="offer-heading">
               <div>
-                <span class="sample-tag">Offre exemple</span>
+                <span class="sample-tag">{{ result.offre.source === 'INTERNE' ? 'SmartRecruit' : 'Externe · ' + result.offre.source }}</span>
                 <h2>{{ result.offre.titre }}</h2>
+                @if (result.offre.entreprise || result.offre.localisation) {
+                  <p class="offer-meta">
+                    {{ result.offre.entreprise || 'Entreprise non précisée' }}
+                    @if (result.offre.localisation) { <span>· {{ result.offre.localisation }}</span> }
+                  </p>
+                }
               </div>
               <div class="score" [attr.aria-label]="'Correspondance : ' + result.score + ' pour cent'">
                 <strong>{{ result.score }}%</strong>
@@ -72,6 +89,9 @@
               <span [style.width.%]="result.score"></span>
             </div>
             <p class="explanation">{{ result.explication }}</p>
+            @if (result.offre.description) {
+              <p class="description">{{ result.offre.description }}</p>
+            }
 
             <div class="skill-columns">
               <section>
@@ -99,6 +119,11 @@
                 }
               </section>
             </div>
+            @if (result.offre.source === 'INTERNE') {
+              <a class="offer-link" [routerLink]="['/offres', result.offre.id]">Voir l’offre</a>
+            } @else if (result.offre.url) {
+              <a class="offer-link" [href]="result.offre.url" target="_blank" rel="noopener noreferrer">Voir l’offre originale</a>
+            }
           </article>
         }
       </section>

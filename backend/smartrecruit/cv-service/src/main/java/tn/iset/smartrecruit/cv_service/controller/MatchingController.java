@@ -47,6 +47,10 @@ public class MatchingController {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
                     "Validez votre profil et vos compétences avant de demander des recommandations.");
         }
+        if (profil.competencesValidees() == null || profil.competencesValidees().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Validez au moins une compétence dans votre profil avant de demander des recommandations.");
+        }
 
         return matchingService.evaluerToutes(profil, offres);
     }

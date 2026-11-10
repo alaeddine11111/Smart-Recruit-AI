@@ -34,6 +34,22 @@ class MatchingServiceTest {
     }
 
     @Test
+    void comparesOnlyCandidateValidatedSkills() {
+        Profil profil = new Profil("profile-id", "candidate-id", "", "", "", "",
+                List.of(), List.of(),
+                List.of(new Profil.Competence("Java", "")),
+                List.of(new Profil.Competence("SQL", "")),
+                List.of(new Profil.Competence("Python", "")),
+                List.of(), List.of(), true, null);
+
+        ResultatMatching resultat = service.evaluer(profil, offre("Java", "SQL", "Python"));
+
+        assertEquals(33, resultat.score());
+        assertEquals(List.of("Python"), resultat.competencesCorrespondantes());
+        assertEquals(List.of("Java", "SQL"), resultat.competencesManquantes());
+    }
+
+    @Test
     void returnsZeroWhenOfferHasNoRequiredSkills() {
         ResultatMatching resultat = service.evaluer(profil("Java"), offre());
 
@@ -61,6 +77,7 @@ class MatchingServiceTest {
     }
 
     private OffreMatchingRequest offre(String... competences) {
-        return new OffreMatchingRequest("offer-id", "Développeur", "INTERNE", null, List.of(competences));
+        return new OffreMatchingRequest("offer-id", "Développeur", "INTERNE", null,
+                List.of(competences), null, null, null);
     }
 }
