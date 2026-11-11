@@ -21,9 +21,10 @@ public class AuthController {
         return ResponseEntity.status(HttpStatus.CREATED).body(authService.registerCandidat(req));
     }
 
+    /** Creates a request for the admin, not an account. */
     @PostMapping("/register/recruteur")
-    public ResponseEntity<AuthResponse> registerRecruteur(@Valid @RequestBody RegisterRecruteurRequest req) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(authService.registerRecruteur(req));
+    public ResponseEntity<MessageResponse> registerRecruteur(@Valid @RequestBody RegisterRecruteurRequest req) {
+        return ResponseEntity.status(HttpStatus.ACCEPTED).body(authService.demanderCompteRecruteur(req));
     }
 
     @PostMapping("/login")

@@ -93,8 +93,11 @@
         <a class="edit-link" routerLink="/recruteur/offres/new">Publier une offre</a>
       </nav>
     }
-    @case ('ADMIN') {
+        @case ('ADMIN') {
       <p>Votre espace administrateur. Voici les comptes de la plateforme.</p>
+      <nav class="recruiter-actions" aria-label="Espace administrateur">
+        <a class="edit-link" routerLink="/admin/demandes">Demandes de comptes recruteur</a>
+      </nav>
     }
   }
 

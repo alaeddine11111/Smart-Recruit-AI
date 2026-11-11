@@ -1,0 +1,89 @@
+<header class="bar">
+  <strong class="brand">SmartRecruit AI</strong>
+  <div class="who">
+    <a class="back" routerLink="/tableau-de-bord">Tableau de bord</a>
+    <span>{{ user()?.nom }}</span>
+    <button type="button" (click)="auth.logout()">Se déconnecter</button>
+  </div>
+</header>
+
+<main class="content">
+  <h1>Demandes de comptes recruteur</h1>
+  <p class="lead">Acceptez une demande pour créer le compte et attribuer le rôle recruteur.</p>
+
+  <div class="tabs" role="tablist">
+    @for (o of onglets; track o.statut) {
+      <button type="button" role="tab"
+              [class.on]="statut() === o.statut"
+              [attr.aria-selected]="statut() === o.statut"
+              (click)="choisir(o.statut)">{{ o.label }}</button>
+    }
+  </div>
+
+  @if (error()) {
+    <p class="err banner" role="alert">{{ error() }}</p>
+  }
+
+  @if (loading()) {
+    <p class="empty" role="status">Chargement…</p>
+  } @else if (demandes().length === 0) {
+    <p class="empty">Aucune demande dans cette catégorie.</p>
+  } @else {
+    <ul class="list">
+      @for (d of demandes(); track d.id) {
+        <li class="card">
+          <div class="card-top">
+            <div>
+              <h2>{{ d.entrepriseNom }}</h2>
+              <p class="meta">Demandée le {{ d.dateDemande | date: 'dd/MM/yyyy HH:mm' }}</p>
+            </div>
+            <span class="badge" [class]="'badge ' + d.statut">
+              @switch (d.statut) {
+                @case ('EN_ATTENTE') { En attente }
+                @case ('ACCEPTEE') { Acceptée }
+                @case ('REFUSEE') { Refusée }
+              }
+            </span>
+          </div>
+
+          <dl class="infos">
+            <div><dt>Demandeur</dt><dd>{{ d.nom }}{{ d.poste ? ' (' + d.poste + ')' : '' }}</dd></div>
+            <div><dt>Email</dt><dd>{{ d.email }}</dd></div>
+            @if (d.entrepriseSiteWeb) {
+              <div><dt>Site web</dt><dd>{{ d.entrepriseSiteWeb }}</dd></div>
+            }
+            @if (d.entrepriseDescription) {
+              <div class="full"><dt>Présentation</dt><dd>{{ d.entrepriseDescription }}</dd></div>
+            }
+            @if (d.motifRefus) {
+              <div class="full"><dt>Motif du refus</dt><dd>{{ d.motifRefus }}</dd></div>
+            }
+          </dl>
+
+          @if (d.statut === 'EN_ATTENTE') {
+            @if (refusId() === d.id) {
+              <div class="refus">
+                <label [attr.for]="'motif-' + d.id">Motif du refus (optionnel)</label>
+                <textarea [id]="'motif-' + d.id" rows="2" [(ngModel)]="motif"></textarea>
+                <div class="actions">
+                  <button type="button" class="btn danger" [disabled]="busyId() === d.id"
+                          (click)="confirmerRefus(d)">Confirmer le refus</button>
+                  <button type="button" class="btn ghost" (click)="annulerRefus()">Annuler</button>
+                </div>
+              </div>
+            } @else {
+              <div class="actions">
+                <button type="button" class="btn primary" [disabled]="busyId() === d.id"
+                        (click)="accepter(d)">
+                  {{ busyId() === d.id ? 'Un instant…' : 'Accepter' }}
+                </button>
+                <button type="button" class="btn ghost" [disabled]="busyId() === d.id"
+                        (click)="ouvrirRefus(d)">Refuser</button>
+              </div>
+            }
+          }
+        </li>
+      }
+    </ul>
+  }
+</main>

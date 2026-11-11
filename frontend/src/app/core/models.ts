@@ -77,3 +77,23 @@ export interface AnalyseInfo {
   texteOCR?: string;
   ocrUtilise?: boolean;
 }
+
+export interface MessageResponse {
+  message: string;
+}
+
+export type StatutDemande = 'EN_ATTENTE' | 'ACCEPTEE' | 'REFUSEE';
+
+export interface DemandeRecruteur {
+  id: string;
+  nom: string;
+  email: string;
+  poste: string | null;
+  entrepriseNom: string;
+  entrepriseDescription: string | null;
+  entrepriseSiteWeb: string | null;
+  statut: StatutDemande;
+  motifRefus: string | null;
+  dateDemande: string;
+  dateTraitement: string | null;
+}

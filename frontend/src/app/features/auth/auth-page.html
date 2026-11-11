@@ -34,87 +34,121 @@
     <div class="form-wrap">
       <p class="brand">SmartRecruit AI</p>
 
-      <h1>{{ mode === 'login' ? 'Connexion' : 'Créer un compte' }}</h1>
-      <p class="lead">
-        {{ mode === 'login'
-          ? 'Retrouvez vos candidatures, vos offres et vos recommandations.'
-          : 'Déposez votre CV ou publiez vos offres en deux minutes.' }}
-      </p>
-
-      @if (mode === 'register') {
-        <div class="switch" role="group" aria-label="Type de compte">
-          <button type="button" [class.on]="role() === 'CANDIDAT'" [attr.aria-pressed]="role() === 'CANDIDAT'"
-                  (click)="chooseRole('CANDIDAT')">Candidat</button>
-          <button type="button" [class.on]="role() === 'RECRUTEUR'" [attr.aria-pressed]="role() === 'RECRUTEUR'"
-                  (click)="chooseRole('RECRUTEUR')">Recruteur</button>
+      @if (demandeEnvoyee()) {
+        <!-- Recruiter request sent: no account yet -->
+        <div class="success" role="status">
+          <h1>Demande envoyée</h1>
+          <p class="lead">{{ demandeEnvoyee() }}</p>
+          <p class="hint">
+            Si votre demande est refusée, le motif s'affichera lorsque vous essaierez de vous connecter.
+          </p>
+          <a class="submit link-btn" routerLink="/connexion">Aller à la connexion</a>
         </div>
-      }
+      } @else {
+        <h1>
+          {{ mode === 'login'
+              ? 'Connexion'
+              : (role() === 'RECRUTEUR' ? 'Demander un compte recruteur' : 'Créer un compte') }}
+        </h1>
+        <p class="lead">
+          {{ mode === 'login'
+              ? 'Retrouvez vos candidatures, vos offres et vos recommandations.'
+              : (role() === 'RECRUTEUR'
+                  ? 'Présentez votre entreprise. Un administrateur valide chaque demande avant l’activation du compte.'
+                  : 'Déposez votre CV en deux minutes.') }}
+        </p>
 
-      <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
         @if (mode === 'register') {
+          <div class="switch" role="group" aria-label="Type de compte">
+            <button type="button" [class.on]="role() === 'CANDIDAT'" [attr.aria-pressed]="role() === 'CANDIDAT'"
+                    (click)="chooseRole('CANDIDAT')">Candidat</button>
+            <button type="button" [class.on]="role() === 'RECRUTEUR'" [attr.aria-pressed]="role() === 'RECRUTEUR'"
+                    (click)="chooseRole('RECRUTEUR')">Recruteur</button>
+          </div>
+        }
+
+        <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+          @if (mode === 'register') {
+            <div class="field">
+              <label for="nom">Nom complet</label>
+              <input id="nom" type="text" formControlName="nom" autocomplete="name">
+              @if (showError('nom')) { <p class="err">Entrez votre nom.</p> }
+            </div>
+          }
+
           <div class="field">
-            <label for="nom">Nom complet</label>
-            <input id="nom" type="text" formControlName="nom" autocomplete="name">
-            @if (showError('nom')) { <p class="err">Entrez votre nom.</p> }
+            <label for="email">Email</label>
+            <input id="email" type="email" formControlName="email" autocomplete="email">
+            @if (showError('email')) { <p class="err">Entrez une adresse email valide.</p> }
           </div>
-        }
 
-        <div class="field">
-          <label for="email">Email</label>
-          <input id="email" type="email" formControlName="email" autocomplete="email">
-          @if (showError('email')) { <p class="err">Entrez une adresse email valide.</p> }
-        </div>
-
-        <div class="field">
-          <label for="motDePasse">Mot de passe</label>
-          <input id="motDePasse" type="password" formControlName="motDePasse"
-                 [autocomplete]="mode === 'login' ? 'current-password' : 'new-password'">
-          @if (showError('motDePasse')) { <p class="err">Au moins 8 caractères.</p> }
-        </div>
-
-        @if (mode === 'register' && role() === 'CANDIDAT') {
-          <div class="row">
-            <div class="field">
-              <label for="telephone">Téléphone</label>
-              <input id="telephone" type="tel" formControlName="telephone" autocomplete="tel">
-            </div>
-            <div class="field">
-              <label for="localisation">Ville</label>
-              <input id="localisation" type="text" formControlName="localisation">
-            </div>
+          <div class="field">
+            <label for="motDePasse">Mot de passe</label>
+            <input id="motDePasse" type="password" formControlName="motDePasse"
+                   [autocomplete]="mode === 'login' ? 'current-password' : 'new-password'">
+            @if (showError('motDePasse')) { <p class="err">Au moins 8 caractères.</p> }
           </div>
-        }
 
-        @if (mode === 'register' && role() === 'RECRUTEUR') {
-          <div class="row">
-            <div class="field">
-              <label for="entrepriseNom">Entreprise</label>
-              <input id="entrepriseNom" type="text" formControlName="entrepriseNom" autocomplete="organization">
-              @if (showError('entrepriseNom')) { <p class="err">Entrez le nom de l'entreprise.</p> }
+          @if (mode === 'register' && role() === 'CANDIDAT') {
+            <div class="row">
+              <div class="field">
+                <label for="telephone">Téléphone</label>
+                <input id="telephone" type="tel" formControlName="telephone" autocomplete="tel">
+              </div>
+              <div class="field">
+                <label for="localisation">Ville</label>
+                <input id="localisation" type="text" formControlName="localisation">
+              </div>
             </div>
-            <div class="field">
-              <label for="poste">Votre poste</label>
-              <input id="poste" type="text" formControlName="poste" autocomplete="organization-title">
+          }
+
+          @if (mode === 'register' && role() === 'RECRUTEUR') {
+            <div class="row">
+              <div class="field">
+                <label for="entrepriseNom">Entreprise</label>
+                <input id="entrepriseNom" type="text" formControlName="entrepriseNom" autocomplete="organization">
+                @if (showError('entrepriseNom')) { <p class="err">Entrez le nom de l'entreprise.</p> }
+              </div>
+              <div class="field">
+                <label for="poste">Votre poste</label>
+                <input id="poste" type="text" formControlName="poste" autocomplete="organization-title">
+              </div>
             </div>
-          </div>
-        }
 
-        @if (error()) {
-          <p class="err banner" role="alert">{{ error() }}</p>
-        }
+            <div class="field">
+              <label for="entrepriseSiteWeb">Site web de l'entreprise</label>
+              <input id="entrepriseSiteWeb" type="url" formControlName="entrepriseSiteWeb"
+                     placeholder="https://" autocomplete="url">
+            </div>
 
-        <button class="submit" type="submit" [disabled]="loading()">
-          {{ loading() ? 'Un instant…' : (mode === 'login' ? 'Se connecter' : 'Créer mon compte') }}
-        </button>
-      </form>
+            <div class="field">
+              <label for="entrepriseDescription">Présentation de l'entreprise</label>
+              <textarea id="entrepriseDescription" rows="3" formControlName="entrepriseDescription"
+                        placeholder="Activité, taille, ce que vous recrutez…"></textarea>
+            </div>
+          }
 
-      <p class="alt">
-        @if (mode === 'login') {
-          Pas encore de compte ? <a routerLink="/inscription">Créer un compte</a>
-        } @else {
-          Déjà inscrit ? <a routerLink="/connexion">Se connecter</a>
-        }
-      </p>
+          @if (error()) {
+            <p class="err banner" role="alert">{{ error() }}</p>
+          }
+
+          <button class="submit" type="submit" [disabled]="loading()">
+            {{ loading()
+                ? 'Un instant…'
+                : (mode === 'login'
+                    ? 'Se connecter'
+                    : (role() === 'RECRUTEUR' ? 'Envoyer ma demande' : 'Créer mon compte')) }}
+          </button>
+        </form>
+
+        <p class="alt">
+          @if (mode === 'login') {
+            Pas encore de compte ? <a routerLink="/inscription">Créer un compte</a>
+          } @else {
+            Déjà inscrit ? <a routerLink="/connexion">Se connecter</a>
+          }
+        </p>
+      }
     </div>
   </section>
 </main>

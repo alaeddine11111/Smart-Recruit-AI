@@ -225,3 +225,38 @@ input:focus {
   .page { grid-template-columns: 1fr; }
   .sheet-side { display: none; }
 }
+
+/* ---------- Recruiter request ---------- */
+textarea {
+  width: 100%;
+  font: inherit;
+  padding: 0.7rem 0.85rem;
+  border: 1.5px solid var(--line);
+  border-radius: 10px;
+  background: var(--paper);
+  color: var(--ink);
+  resize: vertical;
+}
+
+textarea:focus {
+  outline: none;
+  border-color: var(--cobalt);
+  box-shadow: 0 0 0 3px rgba(26, 63, 209, 0.2);
+}
+
+.success {
+  border-left: 4px solid var(--cobalt);
+  padding-left: 1.25rem;
+}
+
+.hint {
+  margin: 0 0 1.5rem;
+  color: #4a5877;
+  font-size: 0.95rem;
+}
+
+.link-btn {
+  display: block;
+  text-align: center;
+  text-decoration: none;
+}

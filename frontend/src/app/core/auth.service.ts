@@ -2,8 +2,9 @@ import { Injectable, computed, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, tap } from 'rxjs';
+
 import {
-  AuthResponse, LoginRequest, RegisterCandidatRequest,
+  AuthResponse, LoginRequest, MessageResponse, RegisterCandidatRequest,
   RegisterRecruteurRequest, User,
 } from './models';
 
@@ -31,9 +32,9 @@ export class AuthService {
     return this.http.post<AuthResponse>(`${API}/auth/register/candidat`, body).pipe(tap(r => this.save(r)));
   }
 
-  registerRecruteur(body: RegisterRecruteurRequest): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${API}/auth/register/recruteur`, body).pipe(tap(r => this.save(r)));
-  }
+  registerRecruteur(body: RegisterRecruteurRequest): Observable<MessageResponse> {
+  return this.http.post<MessageResponse>(`${API}/auth/register/recruteur`, body);
+}
 
   me(): Observable<User> {
     return this.http.get<User>(`${API}/auth/me`);

@@ -80,6 +80,8 @@ export class AuthPage {
   readonly role = signal<RoleChoice>('CANDIDAT');
   readonly loading = signal(false);
   readonly error = signal<string | null>(null);
+  /** Filled once a recruiter request is sent: the page then shows a confirmation. */
+  readonly demandeEnvoyee = signal<string | null>(null);
   readonly sheet = computed(() => (this.role() === 'CANDIDAT' ? CANDIDATE_SHEET : OFFER_SHEET));
 
   readonly form = this.fb.nonNullable.group({
@@ -90,6 +92,8 @@ export class AuthPage {
     localisation: [''],
     poste: [''],
     entrepriseNom: [''],
+    entrepriseSiteWeb: [''],
+    entrepriseDescription: [''],
   });
 
   chooseRole(r: RoleChoice): void {
@@ -117,32 +121,55 @@ export class AuthPage {
     this.error.set(null);
     const v = this.form.getRawValue();
 
-    const request$ =
-      this.mode === 'login'
-        ? this.auth.login({ email: v.email, motDePasse: v.motDePasse })
-        : this.role() === 'CANDIDAT'
-          ? this.auth.registerCandidat({
-              nom: v.nom,
-              email: v.email,
-              motDePasse: v.motDePasse,
-              telephone: v.telephone || undefined,
-              localisation: v.localisation || undefined,
-            })
-          : this.auth.registerRecruteur({
-              nom: v.nom,
-              email: v.email,
-              motDePasse: v.motDePasse,
-              poste: v.poste || undefined,
-              entrepriseNom: v.entrepriseNom,
-            });
+    const onError = (e: HttpErrorResponse) => {
+      this.loading.set(false);
+      this.error.set(this.messageFrom(e));
+    };
 
-    request$.subscribe({
+    // Login
+    if (this.mode === 'login') {
+      this.auth.login({ email: v.email, motDePasse: v.motDePasse }).subscribe({
         next: res => this.router.navigate([res.user.role === 'CANDIDAT' ? '/mon-cv' : '/tableau-de-bord']),
-      error: (e: HttpErrorResponse) => {
-        this.loading.set(false);
-        this.error.set(this.messageFrom(e));
-      },
-    });
+        error: onError,
+      });
+      return;
+    }
+
+    // Candidate: account created immediately
+    if (this.role() === 'CANDIDAT') {
+      this.auth
+        .registerCandidat({
+          nom: v.nom,
+          email: v.email,
+          motDePasse: v.motDePasse,
+          telephone: v.telephone || undefined,
+          localisation: v.localisation || undefined,
+        })
+        .subscribe({
+          next: res => this.router.navigate([res.user.role === 'CANDIDAT' ? '/mon-cv' : '/tableau-de-bord']),
+          error: onError,
+        });
+      return;
+    }
+
+    // Recruiter: only a request is sent, an admin decides
+    this.auth
+      .registerRecruteur({
+        nom: v.nom,
+        email: v.email,
+        motDePasse: v.motDePasse,
+        poste: v.poste || undefined,
+        entrepriseNom: v.entrepriseNom,
+        entrepriseSiteWeb: v.entrepriseSiteWeb || undefined,
+        entrepriseDescription: v.entrepriseDescription || undefined,
+      })
+      .subscribe({
+        next: res => {
+          this.loading.set(false);
+          this.demandeEnvoyee.set(res.message);
+        },
+        error: onError,
+      });
   }
 
   private messageFrom(e: HttpErrorResponse): string {
