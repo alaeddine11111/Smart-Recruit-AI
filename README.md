@@ -10,7 +10,8 @@ SmartRecruit AI connects candidates and recruiters. Candidates upload their CV, 
 smartrecruit/
 ├── backend/smartrecruit/
 │   ├── auth-service/   users, login, JWT (port 8081)
-│   └── cv-service/     CV upload, storage, analysis result (port 8082)
+│   ├── cv-service/     CV upload, storage, analysis result (port 8082)
+│   └── offer-service/  companies, job offers, external offers, skills endpoints (port 8084)
 ├── ocr-service/        Python service: PDF to text to structured data (port 8083)
 ├── frontend/           Angular web app (port 4200)
 └── README.md
@@ -41,7 +42,7 @@ Run each service in its own terminal (or run its Spring Boot application from In
 
 ```powershell
 cd backend\smartrecruit\auth-service
-mvn spring-boot:run
+.\mvnw.cmd spring-boot:run
 ```
 
 The auth API starts at `http://localhost:8081`. The first run creates the `smartrecruit_auth` database and a default admin account.
@@ -58,9 +59,11 @@ The CV API starts at `http://localhost:8082`. Installed Maven can also be used w
 **Offers — port 8084:**
 
 ```powershell
-cd C:\Users\turbo\Smart-Recruit-AI\backend\smartrecruit\offer-service
+cd backend\smartrecruit\offer-service
 .\mvnw.cmd spring-boot:run
 ```
+
+`offer-service` uses the same JWT secret as the other services. External offers are translated to English through `ocr-service`, so start the OCR service (step 4) before using the external offers page. See the "offer-service" API section below.
 
 ### 4. OCR service
 
@@ -76,7 +79,15 @@ $env:GEMINI_MODEL = "gemini-3.8-flash"
 python -m uvicorn main:app --reload --port 8083
 ```
 
+
 The key and model variables apply only to that terminal session. The OCR service defaults to `gemini-3.8-flash` if `GEMINI_MODEL` is not set. Its interactive API docs are at `http://localhost:8083/docs`.
+
+To avoid showing the key on screen (screenshots, screen sharing), set it with a hidden prompt instead:
+
+```powershell
+$s = Read-Host "Gemini API key" -AsSecureString
+$env:GEMINI_API_KEY = [System.Net.NetworkCredential]::new("", $s).Password
+```
 
 ### 5. Front end
 
@@ -104,6 +115,11 @@ Spring configuration is in each service's `src/main/resources/application.yml`. 
 | `GEMINI_API_KEY` | ocr-service | Personal Gemini API key | Required for Gemini analysis |
 | `GEMINI_MODEL` | ocr-service | Gemini model name | `gemini-3.8-flash` |
 | `GEMINI_FALLBACK_MODELS` | ocr-service | Comma-separated fallback model names | Empty |
+| `MONGODB_URI` | offer-service | MongoDB connection | `mongodb://localhost:27017/smartrecruit_offers` |
+| `JWT_SECRET` | offer-service | Must be the same value as in auth-service and cv-service | Development key in `application.yml` |
+| `OCR_URL` | offer-service | OCR service base URL, used to translate external offers | `http://localhost:8083` |
+| `JOOBLE_API_KEY` | offer-service | Optional Jooble key (the Jooble provider is disabled by default) | Empty |
+| `ADZUNA_APP_ID`, `ADZUNA_APP_KEY` | offer-service | Optional Adzuna keys (the Adzuna provider is disabled by default) | Empty |
 
 ## Security and privacy
 
@@ -111,6 +127,7 @@ Spring configuration is in each service's `src/main/resources/application.yml`. 
 - Everyone uses their **own** Gemini key.
 - The content of an uploaded CV is sent to Google's Gemini API for analysis. This is fine for the project, but it is personal data, so use test CVs when you can.
 - `ocr-service` has no authentication yet. Do not expose it outside your own machine.
+- The title and description of external job ads are sent to Google's Gemini API (through `ocr-service` `/translate`) to be translated to English. They are public job ads, not personal data.
 - Uploaded CV PDFs are stored on disk; MongoDB contains their metadata, not the PDF bytes. Keep the upload directory out of Git (`uploads/` is ignored).
 
 ## Users and roles
@@ -167,13 +184,83 @@ validated skills and location. External scores use recognized technology terms
 found in each listing's title and description, not employer-confirmed
 requirements. Listings with no recognized technology terms are not scored.
 
+External listings are translated to English by `offer-service` before they reach the recommendations page (see below), so the recognized technology terms found in a listing's title and description are matched in English.
+
+### offer-service (port 8084)
+
+All endpoints require a valid bearer token (same JWT as the other services). Roles: `RECRUTEUR` and `ADMIN` for `/api/recruteur/**`, any logged-in role for the others. Recruiters can only manage their own company and offers (`ADMIN` can manage any).
+
+| Method | Endpoint | Access | Description |
+|--------|----------|--------|-------------|
+| GET / PUT | `/api/recruteur/entreprise` | Recruiter, admin | Read / create-or-update my company |
+| GET | `/api/entreprises/{id}` | Logged in | Company card shown on an offer |
+| GET | `/api/recruteur/offres?statut=&titre=&page=&size=` | Recruiter, admin | My offers |
+| GET | `/api/recruteur/offres/{id}` | Owner, admin | One of my offers |
+| POST | `/api/recruteur/offres` | Recruiter, admin | Create an offer (a company is required first) |
+| PUT | `/api/recruteur/offres/{id}` | Owner, admin | Update an offer |
+| PATCH | `/api/recruteur/offres/{id}/statut?value=PUBLISHED` | Owner, admin | Publish / close (`DRAFT`, `PUBLISHED`, `CLOSED`) |
+| DELETE | `/api/recruteur/offres/{id}` | Owner, admin | Delete an offer |
+| GET | `/api/offres?titre=&localisation=&competences=java,spring&typeContrat=CDI&page=&size=` | Logged in | Browse published offers (filters combine, all listed skills must match) |
+| GET | `/api/offres/{id}` | Logged in | Published offer detail |
+| GET | `/api/offres-externes?q=&location=&page=` | Logged in | External offers, translated to English |
+
+Offers are stored in the `offres_emploi` collection and companies in `entreprises` (database `smartrecruit_offers` by default). Skills are saved trimmed and in lowercase. Contract types: `CDI`, `CDD`, `STAGE`, `FREELANCE`, `ALTERNANCE`.
+
+#### Skills endpoints (for AI skill matching)
+
+These read-only endpoints return the skills used in **published** offers only (drafts and closed offers are never included). They are meant for the skill matching.
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/offres/competences?q=&limit=` | Distinct skills as an array of strings (lowercase), most frequent first. Optional `q` is a case-insensitive "contains" filter; `limit` defaults to 100 (max 500) |
+| GET | `/api/offres/competences/stats` | Skills with their number of offers: `[{ "competence": "java", "count": 12 }]` |
+| GET | `/api/offres/index-competences` | All published offers in a light format, no pagination (max 1000): `id`, `titre`, `entrepriseNom`, `localisation`, `typeContrat`, `competences` |
+
+Skills are plain lowercase strings with no alias mapping, so `springboot` and `spring boot` are different values. The matching service already trims, lowercases and removes accents on both sides. If `cv-service` calls these endpoints from the backend, it must forward the user's `Authorization` header.
+
+#### External offers and translation
+
+`GET /api/offres-externes` fetches listings from free job APIs, translates them to English and returns them with a link to the original posting. External offers are never stored in the database.
+
+| Provider | Key needed | Coverage | Status |
+|----------|-----------|----------|--------|
+| Remotive | No | Remote tech jobs | Enabled in `application.yml` |
+| Arbeitnow | No | Europe (mostly Germany) and remote jobs | Enabled in `application.yml` |
+| Jooble | Yes (`JOOBLE_API_KEY`) | Country job sites | Disabled, optional |
+| Adzuna | Yes (`ADZUNA_APP_ID`, `ADZUNA_APP_KEY`) | Per country, Tunisia not covered | Disabled, optional |
+
+Settings in `offer-service/src/main/resources/application.yml`:
+
+```yaml
+external-jobs:
+  arbeitnow:
+    enabled: true
+  remotive:
+    enabled: true
+  jooble:
+    enabled: false
+    api-key: ${JOOBLE_API_KEY:}
+  translation:
+    enabled: true
+    url: ${OCR_URL:http://localhost:8083}
+```
+
+How translation works:
+- `offer-service` sends the title and description of each listing to `POST /translate` on `ocr-service` (Gemini), in small batches.
+- The response contains the English `titre` and `description`. The original text is kept in `titreOriginal` and `descriptionOriginal`, and `langueSource` holds the detected language (for example `de`). The page shows "Translated from DE" for translated offers.
+- Each translation is cached in memory per offer, so an offer is translated only once. The first search can take 10 to 30 seconds; later searches are fast. The cache is cleared when `offer-service` restarts.
+- If the OCR service is stopped, slow or rate limited, the original (untranslated) text is returned and a warning is logged. The page never breaks.
+- Remotive and Arbeitnow downloads are cached in memory (6 hours and 1 hour) to respect their rate limits. Every listing keeps its source name and link back to the original posting.
+- Set `external-jobs.translation.enabled: false` to disable translation.
+
 ### ocr-service (port 8083)
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | POST | `/analyse` | Multipart form, field `file` (PDF only). Returns `texteOCR`, `ocrUtilise`, `pages` and `donnees` (skills, experience, education, languages) |
+| POST | `/translate` | JSON body `{ "target": "en", "items": [{ "id", "titre", "description" }] }`. Translates job ads to English with Gemini and returns `{ "items": [{ "id", "titre", "description", "sourceLanguage" }] }`. Used by `offer-service` for external offers (at most 20 items per request) |
 
-Errors: `400` not a PDF, `422` unreadable PDF, `429` free Gemini limit reached, `502` Gemini unavailable or invalid answer.
+Errors: `400` not a PDF, `422` unreadable PDF, `429` free Gemini limit reached, `502` Gemini unavailable or invalid answer. For `/translate`: `422` invalid request body, `502` with `Service IA indisponible: <error>` when the Gemini call fails.
 
 ## Front end pages
 
@@ -186,6 +273,11 @@ Errors: `400` not a PDF, `422` unreadable PDF, `429` free Gemini limit reached, 
 | `/tableau-de-bord` | Candidate dashboard with saved profile, validated skills, experience and education; recruiter/admin workspace |
 | `/offres` | Browse published internal offers |
 | `/recruteur` | Recruiter offer and company management |
+| `/recruteur/entreprise` | Recruiter company profile |
+| `/recruteur/offres` | Recruiter offer list: publish, close, edit, delete |
+| `/recruteur/offres/new` and `/recruteur/offres/:id/edit` | Post or edit an offer |
+| `/offres/:id` | Published offer detail with the company card |
+| `/offres/externes` | External offers (Remotive, Arbeitnow), translated to English, with an "Apply" link to the original site |
 
 ## Status
 
@@ -199,6 +291,8 @@ Errors: `400` not a PDF, `422` unreadable PDF, `429` free Gemini limit reached, 
 - [x] Company and job-offer service with candidate browsing and recruiter management
 - [x] Matching score API and recommendations page integrated with published internal offers and external listings
 - [x] Job offers: publish (recruiter), browse (candidate)
+- [x] External job offers (Remotive, Arbeitnow) with automatic translation to English
+- [x] Skills endpoints on `offer-service` for AI skill matching
 - [ ] Applications and status tracking
 - [ ] Interview preparation
 - [ ] Recruiter and administrator dashboards
@@ -216,6 +310,11 @@ Errors: `400` not a PDF, `422` unreadable PDF, `429` free Gemini limit reached, 
 | OCR returns `429` | Gemini quota or rate limit reached. Wait and retry, or configure an available fallback model. |
 | `$env:...` gives a syntax error | That syntax is for PowerShell. In Command Prompt use `set NAME=value`. |
 | `ng` or `npm` errors at install | Check `node -v` against the prerequisites. |
+| External offers are shown in German or another language | Translation is off or failing. Check `external-jobs.translation.enabled: true` in `offer-service`, that `ocr-service` is running on port 8083, and the `Translation` lines in the `offer-service` log. Restart `offer-service` after changing its code or settings. |
+| `POST /translate` returns `502 Service IA indisponible: ...` | The text after the colon is the real Gemini error: wrong `GEMINI_MODEL` (404), invalid key (400/403) or quota (429). Set the key and model in the same terminal that runs `ocr-service`, then restart it. |
+| `/offres/externes` shows "No external offers found" | Enable `remotive` or `arbeitnow` in `offer-service` `application.yml`, restart it, and try broader keywords with an empty location. |
+| `.\mvnw.cmd` says `JAVA_HOME` is not defined correctly | Point `JAVA_HOME` to a JDK 21 folder in that terminal, for example `$env:JAVA_HOME = "C:\Program Files\Eclipse Adoptium\jdk-21.x.x-hotspot"`, and add `%JAVA_HOME%\bin` to `Path`. |
+| `.\mvnw.cmd` is not recognized in a service folder | That service has no Maven wrapper: copy `mvnw`, `mvnw.cmd` and the `.mvn` folder from another service, or use an installed `mvn`. |
 
 ## Team
 

@@ -35,6 +35,14 @@ public class OffreEmploiService {
                 .orElseThrow(() -> new ResourceNotFoundException("Offer not found"));
     }
 
+    public List<SkillCount> publishedSkillStats(String query, int limit) {
+        return repo.aggregatePublishedSkills(query, limit);
+    }
+
+    public List<OffreSkillsView> publishedSkillOffers(int limit) {
+        return repo.publishedSkillOffers(limit);
+    }
+
     // ------------------------------------------------ recruiter side
     public PageResponse<OffreEmploi> searchMine(OffreFilter f, Pageable p) {
         var forced = new OffreFilter(f.titre(), f.localisation(), f.competences(), f.typeContrat(),

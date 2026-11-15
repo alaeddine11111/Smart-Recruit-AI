@@ -3,6 +3,7 @@ import pymupdf  # PyMuPDF
 from fastapi import FastAPI, UploadFile, HTTPException
 from google import genai
 from google.genai import types
+from pydantic import BaseModel
 
 MODEL = os.getenv("GEMINI_MODEL", "gemini-3.8-flash")
 # Modèles de secours séparés par des virgules (utilisés si le principal est saturé)
@@ -14,6 +15,28 @@ except Exception:
     client = None  # sans clé, le service marche quand même en mode local
 
 app = FastAPI(title="SmartRecruit OCR service")
+
+
+class TranslateItem(BaseModel):
+    id: str
+    titre: str
+    description: str
+
+
+class TranslateRequest(BaseModel):
+    target: str
+    items: list[TranslateItem]
+
+
+class TranslatedItem(BaseModel):
+    id: str
+    titre: str
+    description: str
+    sourceLanguage: str
+
+
+class TranslateResponse(BaseModel):
+    items: list[TranslatedItem]
 
 
 class GeminiIndisponible(Exception):
@@ -212,3 +235,84 @@ def analyse(file: UploadFile):
         "pages": nb_pages,
         "donnees": data,
     }
+
+
+@app.post("/translate", response_model=TranslateResponse)
+def translate(request: TranslateRequest):
+    if len(request.items) > 20:
+        raise HTTPException(400, "20 annonces maximum par requête")
+    if not request.items:
+        return TranslateResponse(items=[])
+    if client is None:
+        raise HTTPException(503, "GEMINI_API_KEY absente")
+
+    prompt = """You translate job ads into English. For each item translate titre and description to English.
+If the text is already English, return it unchanged. Keep technical terms, product names, programming languages
+and frameworks exactly as written (Java, Spring Boot, Angular, MongoDB...). Do not add or remove information.
+Return only a JSON array of objects with the keys id, titre, description, sourceLanguage (ISO 639-1 code).
+The requested target language is ISO 639-1 code """ + request.target + """. This target takes precedence if it differs from English.
+Translate this JSON array:
+""" + json.dumps([
+    {"id": item.id, "titre": item.titre, "description": item.description}
+    for item in request.items
+], ensure_ascii=False)
+
+    try:
+        response = client.models.generate_content(
+            model=MODEL,
+            contents=prompt,
+            config=types.GenerateContentConfig(
+                response_mime_type="application/json", temperature=0),
+        )
+    except Exception as e:
+        import logging
+        logging.exception("translate failed")
+        message = str(e)
+        api_key = os.getenv("GEMINI_API_KEY")
+        if api_key:
+            message = message.replace(api_key, "[REDACTED]")
+        message = message.replace(prompt, "[REDACTED]")[:200]
+        raise HTTPException(
+            502,
+            f"Service IA indisponible: {type(e).__name__}: {message}",
+        )
+
+    response_text = getattr(response, "text", None)
+    raw = re.sub(
+        r"^```(?:json)?|```$",
+        "",
+        response_text.strip() if isinstance(response_text, str) else "",
+        flags=re.IGNORECASE,
+    ).strip()
+    try:
+        translated = json.loads(raw)
+        if not isinstance(translated, list):
+            translated = []
+    except (json.JSONDecodeError, TypeError):
+        translated = []
+
+    by_id = {}
+    for item in translated:
+        if not isinstance(item, dict):
+            continue
+        item_id = item.get("id")
+        if not isinstance(item_id, str):
+            continue
+        if not all(isinstance(item.get(key), str)
+                   for key in ("titre", "description", "sourceLanguage")):
+            continue
+        by_id[item_id] = item
+
+    results = []
+    for original in request.items:
+        item = by_id.get(original.id)
+        if item is None:
+            results.append(TranslatedItem(
+                id=original.id, titre=original.titre,
+                description=original.description, sourceLanguage=""))
+        else:
+            results.append(TranslatedItem(
+                id=original.id, titre=item["titre"],
+                description=item["description"], sourceLanguage=item["sourceLanguage"]))
+
+    return TranslateResponse(items=results)

@@ -1,3 +1,4 @@
+import { UpperCasePipe } from '@angular/common';
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -7,7 +8,7 @@ import { ExternalOffre } from '../../../core/offers.models';
 @Component({
   selector: 'app-external-offers',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, RouterLink, UpperCasePipe],
   template: `
   <section class="max-w-5xl mx-auto p-6">
     <a routerLink="/offres" class="text-blue-700">Back to Smart-Recruit offers</a>
@@ -27,6 +28,9 @@ import { ExternalOffre } from '../../../core/offers.models';
       @for (o of results(); track o.id) {
         <article class="border rounded p-4">
           <h2 class="font-semibold">{{ o.titre }}</h2>
+          @if (o.langueSource) {
+            <p class="text-xs text-gray-500">Translated from {{ o.langueSource | uppercase }}</p>
+          }
           <p class="text-sm text-gray-600">{{ o.entreprise }} · {{ o.localisation }} · via {{ o.source }}</p>
           <p class="text-sm mt-2 line-clamp-3">{{ o.description }}</p>
           <a [href]="o.urlExterne" target="_blank" rel="noopener noreferrer"

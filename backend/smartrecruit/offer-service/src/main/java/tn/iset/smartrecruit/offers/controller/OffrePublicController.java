@@ -7,7 +7,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 
 import java.util.List;
 
@@ -16,7 +20,10 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/offres")
 @RequiredArgsConstructor
+@Validated
 public class OffrePublicController {
+
+    private static final int MAX_SKILL_INDEX_OFFERS = 1000;
 
     private final OffreEmploiService service;
 
@@ -27,6 +34,25 @@ public class OffrePublicController {
                                             @RequestParam(required = false) ContractType typeContrat,
                                             @PageableDefault(size = 10, sort = "datePublication", direction = Sort.Direction.DESC) Pageable p) {
         return service.searchPublished(new OffreFilter(titre, localisation, competences, typeContrat, null, null), p);
+    }
+
+    @GetMapping("/competences")
+    public List<String> competences(@RequestParam(required = false) String q,
+                                    @RequestParam(defaultValue = "100") @Min(1) @Max(500) int limit) {
+        return service.publishedSkillStats(q, limit).stream()
+                .map(SkillCount::competence)
+                .toList();
+    }
+
+    @GetMapping("/competences/stats")
+    public List<SkillCount> competencesStats(@RequestParam(required = false) String q,
+                                             @RequestParam(defaultValue = "100") @Min(1) @Max(500) int limit) {
+        return service.publishedSkillStats(q, limit);
+    }
+
+    @GetMapping("/index-competences")
+    public List<OffreSkillsView> indexCompetences() {
+        return service.publishedSkillOffers(MAX_SKILL_INDEX_OFFERS);
     }
 
     @GetMapping("/{id}")

@@ -33,3 +33,7 @@ external-jobs:
     app-id: ${ADZUNA_APP_ID:}
     app-key: ${ADZUNA_APP_KEY:}
     country: fr
+
+  translation:
+    enabled: true
+    url: ${OCR_URL:http://localhost:8083}

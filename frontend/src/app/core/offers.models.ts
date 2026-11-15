@@ -57,9 +57,12 @@ export interface PageResponse<T> {
 export interface ExternalOffre {
   id: string;
   titre: string;
+  titreOriginal?: string | null;
   entreprise?: string;
   localisation?: string;
   description?: string;
+  descriptionOriginal?: string | null;
+  langueSource?: string | null;
   salaire?: string;
   typeContrat?: string;
   dateMiseAJour?: string;
