@@ -38,12 +38,26 @@ export class MatchingService {
     };
   }
 
-  externalOffer(offer: ExternalOffre): OffreMatching | null {
+  externalOffer(
+    offer: ExternalOffre,
+    candidateSkills: string[] = [],
+    matchedSearchSkills: string[] = [],
+  ): OffreMatching | null {
     const text = this.normalize(`${offer.titre} ${offer.description ?? ''}`);
-    const competencesRequises = KNOWN_SKILLS.filter(skill => {
-      const normalizedSkill = this.normalize(skill).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      return new RegExp(`(^|[^a-z0-9])${normalizedSkill}(?=$|[^a-z0-9])`).test(text);
-    });
+    const matchedKeys = new Set(matchedSearchSkills.map(skill => this.normalize(skill.trim())));
+    const skillKeys = new Set<string>();
+    const competencesRequises = [...KNOWN_SKILLS, ...candidateSkills]
+      .filter(skill => {
+        const key = this.normalize(skill.trim());
+        if (!key || skillKeys.has(key)) return false;
+        skillKeys.add(key);
+        return true;
+      })
+      .filter(skill => {
+        if (matchedKeys.has(this.normalize(skill))) return true;
+        const normalizedSkill = this.normalize(skill).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        return new RegExp(`(^|[^a-z0-9])${normalizedSkill}(?=$|[^a-z0-9])`).test(text);
+      });
 
     if (competencesRequises.length === 0) return null;
 

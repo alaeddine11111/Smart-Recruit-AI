@@ -76,6 +76,7 @@ py -3.12 -m venv .venv
 python -m pip install -r requirements.txt
 $env:GEMINI_API_KEY = "your-key-from-google-ai-studio"
 $env:GEMINI_MODEL = "gemini-3.8-flash"
+$env:GEMINI_FALLBACK_MODELS = "gemini-3.6-flash,gemini-3.7-flash,gemini-3.8-flash"
 python -m uvicorn main:app --reload --port 8083
 ```
 

@@ -1,7 +1,7 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { EMPTY, Observable, catchError, expand, finalize, map, of, reduce, switchMap } from 'rxjs';
+import { EMPTY, Observable, catchError, expand, finalize, forkJoin, map, of, reduce, switchMap } from 'rxjs';
 import { AuthService } from '../../core/auth.service';
 import { MatchingService } from '../../core/matching.service';
 import { OffreExterneService } from '../../core/offre-externe.service';
@@ -93,12 +93,27 @@ export class RecommendationsPage {
       return of([]);
     }
 
-    return this.externalOffers.search(skills.slice(0, 5).join(' '), profile.localisation ?? '').pipe(
-      map(external => {
-        const offers = external
-          .map(offer => this.matchingService.externalOffer(offer))
+    return forkJoin(skills.map(skill => this.externalOffers.search(skill, ''))).pipe(
+      map(results => {
+        const external = new Map<string, (typeof results)[number][number]>();
+        const matchedSkills = new Map<string, Set<string>>();
+        results.forEach((offers, index) => {
+          offers.forEach(offer => {
+            external.set(offer.id, offer);
+            const offerSkills = matchedSkills.get(offer.id) ?? new Set<string>();
+            offerSkills.add(skills[index]);
+            matchedSkills.set(offer.id, offerSkills);
+          });
+        });
+        const externalOffers = [...external.values()];
+        const offers = externalOffers
+          .map(offer => this.matchingService.externalOffer(
+            offer,
+            skills,
+            [...(matchedSkills.get(offer.id) ?? [])],
+          ))
           .filter((offer): offer is OffreMatching => offer !== null);
-        const unscoredCount = external.length - offers.length;
+        const unscoredCount = externalOffers.length - offers.length;
         if (unscoredCount > 0) {
           this.unscoredExternalCount.set(unscoredCount);
         }

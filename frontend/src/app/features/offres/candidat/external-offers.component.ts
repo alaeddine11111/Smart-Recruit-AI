@@ -12,6 +12,7 @@ import { ExternalOffre } from '../../../core/offers.models';
   template: `
   <section class="max-w-5xl mx-auto p-6">
     <a routerLink="/offres" class="text-blue-700">Back to Smart-Recruit offers</a>
+    <a routerLink="/recommandations" class="ml-4 text-blue-700">See matches for my profile</a>
     <h1 class="text-2xl font-semibold my-4">Offers from other sites</h1>
     <p class="text-sm text-gray-600 mb-4">These offers are published by third parties. You apply on their website.</p>
 
