@@ -9,6 +9,10 @@ export class ProfilService {
 
   analyse() { return this.http.get<AnalyseInfo>(`${this.base}/cv/analyse`); }
   profil() { return this.http.get<Profil>(`${this.base}/profil`); }
+  forApplication(applicationId: string) {
+    return this.http.get<Profil>(
+      `${this.base}/recruteur/candidatures/${encodeURIComponent(applicationId)}/profil`);
+  }
   save(p: Profil) { return this.http.put<Profil>(`${this.base}/profil`, p); }
   valider() { return this.http.post<Profil>(`${this.base}/profil/valider`, {}); }
 }

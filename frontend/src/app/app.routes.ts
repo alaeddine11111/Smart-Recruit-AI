@@ -9,6 +9,8 @@ export const routes: Routes = [
   { path: 'tableau-de-bord', canActivate: [authGuard], loadComponent: () => import('./features/dashboard/dashboard').then(m => m.Dashboard) },
   { path: 'mon-cv', canActivate: [authGuard], loadComponent: () => import('./features/condidat/cv-page').then(m => m.CvPage) },
   { path: 'recommandations', canActivate: [authGuard], loadComponent: () => import('./features/condidat/recommendations-page').then(m => m.RecommendationsPage) },
+  { path: 'mes-candidatures', canActivate: [authGuard, roleGuard(['CANDIDAT'])], loadComponent: () => import('./features/condidat/applications-page').then(m => m.ApplicationsPage) },
+  { path: 'preparation-entretien', canActivate: [authGuard, roleGuard(['CANDIDAT'])], loadComponent: () => import('./features/condidat/interview-preparation-page').then(m => m.InterviewPreparationPage) },
   { path: 'admin/demandes', canActivate: [authGuard, roleGuard(['ADMIN'])], loadComponent: () => import('./features/admin/demandes-page').then(m => m.DemandesPage) },
   { path: 'offres', children: CANDIDATE_ROUTES },
   { path: 'recruteur', children: RECRUITER_ROUTES },

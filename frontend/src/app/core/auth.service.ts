@@ -5,7 +5,7 @@ import { Observable, tap } from 'rxjs';
 
 import {
   AuthResponse, LoginRequest, MessageResponse, RegisterCandidatRequest,
-  RegisterRecruteurRequest, User,
+  RegisterRecruteurRequest, RecruiterCandidate, User,
 } from './models';
 
 const API = 'http://localhost:8081/api';
@@ -38,6 +38,11 @@ export class AuthService {
 
   me(): Observable<User> {
     return this.http.get<User>(`${API}/auth/me`);
+  }
+
+  recruiterCandidate(applicationId: string): Observable<RecruiterCandidate> {
+    return this.http.get<RecruiterCandidate>(
+      `${API}/recruteur/candidatures/${encodeURIComponent(applicationId)}/candidate`);
   }
 
   users(): Observable<User[]> {

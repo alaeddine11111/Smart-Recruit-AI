@@ -32,6 +32,7 @@ public class SecurityConfig {
                 .requestMatchers("/error").permitAll()
                 .requestMatchers("/api/offres-externes/**").permitAll()
                 // ---- Offers module ----
+                .requestMatchers("/api/candidatures/**").hasRole("CANDIDAT")
                 .requestMatchers("/api/recruteur/**").hasAnyRole("RECRUTEUR", "ADMIN")
                 .requestMatchers("/api/offres/**", "/api/entreprises/**")
                     .hasAnyRole("CANDIDAT", "RECRUTEUR", "ADMIN")

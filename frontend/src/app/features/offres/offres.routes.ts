@@ -7,6 +7,8 @@ export const RECRUITER_ROUTES: Routes = [
   { path: 'offres', canActivate: [roleGuard(['RECRUTEUR', 'ADMIN'])], loadComponent: () => import('./recruteur/offer-list.component').then(m => m.OfferListComponent) },
   { path: 'offres/new', canActivate: [roleGuard(['RECRUTEUR', 'ADMIN'])], loadComponent: () => import('./recruteur/offer-form.component').then(m => m.OfferFormComponent) },
   { path: 'offres/:id/edit', canActivate: [roleGuard(['RECRUTEUR', 'ADMIN'])], loadComponent: () => import('./recruteur/offer-form.component').then(m => m.OfferFormComponent) },
+  { path: 'candidatures', canActivate: [roleGuard(['RECRUTEUR', 'ADMIN'])], loadComponent: () => import('./recruteur/applications-list.component').then(m => m.ApplicationsListComponent) },
+  { path: 'candidatures/:id', canActivate: [roleGuard(['RECRUTEUR', 'ADMIN'])], loadComponent: () => import('./recruteur/application-detail.component').then(m => m.ApplicationDetailComponent) },
 ];
 
 // 'externes' must stay before ':id'

@@ -270,7 +270,10 @@ export class CvPage {
       next: profil => {
         this.profil.set(profil);
         this.selectedSkillKeys.set(new Set(
-          (profil.competencesValidees ?? []).map(skill => this.skillKey(skill)),
+          [
+            ...(profil.competencesDetectees ?? []),
+            ...(profil.competencesValidees ?? []),
+          ].map(skill => this.skillKey(skill)),
         ));
         this.personalDraft = {
           titre: profil.titre ?? '',

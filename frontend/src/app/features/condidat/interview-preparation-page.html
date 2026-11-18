@@ -1,0 +1,148 @@
+<header class="bar">
+  <a class="brand" routerLink="/tableau-de-bord">SmartRecruit AI</a>
+  <nav class="navigation" aria-label="Navigation candidat">
+    <a routerLink="/mon-cv">Mon CV</a>
+    <a routerLink="/offres">Toutes les offres</a>
+    <span>{{ auth.user()?.nom }}</span>
+    <button type="button" (click)="auth.logout()">Se déconnecter</button>
+  </nav>
+</header>
+
+<main class="content">
+  <section class="intro">
+    <p class="eyebrow">Entraînez-vous à votre rythme</p>
+    <h1>Préparation aux entretiens</h1>
+    <p class="lead">Gemini génère chaque question à partir de vos compétences validées et des informations de votre profil.
+      Pour une offre, il tient aussi compte de sa description et de ses compétences requises.</p>
+  </section>
+
+  @if (error(); as errorMessage) {
+    <p class="error-banner" role="alert">{{ errorMessage }}</p>
+  }
+
+  @if (loading()) {
+    <p class="message" role="status">Chargement…</p>
+  } @else if (currentSession(); as session) {
+    <button class="back-link" type="button" (click)="backToHome()">← Toutes mes sessions</button>
+    <section class="session-card">
+      <div class="session-heading">
+        <div>
+          <p class="eyebrow">{{ session.offreId ? 'Entretien ciblé' : 'Entretien général' }}</p>
+          <h2>{{ session.offreTitre }}</h2>
+        </div>
+        <span class="status" [class.complete]="session.statut === 'TERMINEE'">
+          {{ session.statut === 'TERMINEE' ? 'Terminé' : 'En cours' }}
+        </span>
+      </div>
+
+      @if (session.statut === 'TERMINEE' && session.evaluationFinale; as evaluation) {
+        <section class="results" aria-labelledby="results-title">
+          <div class="score">
+            <strong>{{ session.scoreGlobal }}<span>/100</span></strong>
+            <p id="results-title">Score global</p>
+          </div>
+          <h3>Vos points forts</h3>
+          <ul>@for (item of evaluation.forces; track $index) { <li>{{ item }}</li> }</ul>
+          <h3>À travailler</h3>
+          <ul>@for (item of evaluation.faiblesses; track $index) { <li>{{ item }}</li> }</ul>
+          <h3>Axes d’amélioration</h3>
+          <ul>@for (item of evaluation.axesAmelioration; track $index) { <li>{{ item }}</li> }</ul>
+          <h3>Conseils pour votre entretien</h3>
+          <p>{{ evaluation.conseils }}</p>
+          <div class="answer-review">
+            @for (question of session.questions; track question.id) {
+              <article>
+                <h4>{{ question.question }}</h4>
+                <p class="answer-text">{{ question.reponse }}</p>
+                <p><strong>{{ question.evaluation?.score }}/100</strong> · {{ question.evaluation?.retour }}</p>
+                @if (question.evaluation?.pointsManquants?.length) {
+                  <p>Points à compléter : {{ question.evaluation?.pointsManquants?.join(', ') }}</p>
+                }
+              </article>
+            }
+          </div>
+        </section>
+      } @else {
+        <div class="progress-label">
+          <span>Progression</span>
+          <span>{{ answeredCount(session) }} / {{ session.questions.length }} questions</span>
+        </div>
+        <div class="progress-track" role="progressbar"
+             [attr.aria-valuenow]="answeredCount(session)" aria-valuemin="0"
+             [attr.aria-valuemax]="session.questions.length" aria-label="Progression de l’entretien">
+          <span [style.width.%]="answeredCount(session) / session.questions.length * 100"></span>
+        </div>
+
+        @if (lastEvaluatedQuestion(); as reviewed) {
+          <section class="answer-feedback" aria-live="polite">
+            <p><strong>Évaluation de votre dernière réponse : {{ reviewed.evaluation?.score }}/100</strong></p>
+            <p><strong>Pertinence :</strong> {{ reviewed.evaluation?.pertinence }}</p>
+            <p><strong>Exactitude :</strong> {{ reviewed.evaluation?.exactitude }}</p>
+            @if (reviewed.evaluation?.pointsManquants?.length) {
+              <p><strong>Points à compléter :</strong> {{ reviewed.evaluation?.pointsManquants?.join(', ') }}</p>
+            }
+            <p><strong>Conseil :</strong> {{ reviewed.evaluation?.retour }}</p>
+          </section>
+        }
+
+        @if (session.questions[questionIndex()]; as question) {
+          <article class="question-card">
+            <div class="question-meta">
+              <span>{{ question.type === 'TECHNIQUE' ? 'Technique' : question.type === 'EXPERIENCE' ? 'Expérience' : 'Générale' }}</span>
+              <span>Question {{ questionIndex() + 1 }} sur {{ session.questions.length }}</span>
+            </div>
+            <h3>{{ question.question }}</h3>
+            <label for="answer">Votre réponse</label>
+            <textarea id="answer" name="answer" [(ngModel)]="answer" rows="7"
+                      maxlength="5000" placeholder="Prenez le temps de structurer votre réponse…"></textarea>
+            <button class="primary-action" type="button" (click)="submitAnswer()"
+                    [disabled]="saving() || answer.trim().length === 0">
+              {{ saving() ? 'Évaluation…' : 'Envoyer ma réponse' }}
+            </button>
+          </article>
+        } @else {
+          <p class="all-answered">Toutes vos réponses ont été évaluées. Terminez la session pour obtenir votre bilan global.</p>
+        }
+        @if (answeredCount(session) === session.questions.length) {
+          <button class="finish-action" type="button" (click)="finish()" [disabled]="saving()">
+            {{ saving() ? 'Préparation du bilan…' : 'Terminer et voir mon bilan' }}
+          </button>
+        }
+      }
+    </section>
+  } @else {
+    <section class="start-card">
+      <h2>Commencer une préparation</h2>
+      <p>Choisissez une offre pour cibler le poste, ou laissez ce champ vide pour un entretien général personnalisé à partir de votre profil.</p>
+      <p>Les questions sont générées par Gemini à chaque session. Aucune question pré-écrite n’est utilisée.
+        Vous devez avoir au moins une compétence validée dans votre profil.</p>
+      <label for="offer">Offre d’emploi (facultatif)</label>
+      <select id="offer" [ngModel]="selectedOfferId()" (ngModelChange)="selectedOfferId.set($event)">
+        <option value="">Entretien général</option>
+        @for (offer of offers(); track offer.id) {
+          <option [value]="offer.id">{{ offer.titre }} · {{ offer.entrepriseNom }}</option>
+        }
+      </select>
+      <button class="primary-action" type="button" (click)="start()" [disabled]="loading()">
+        {{ loading() ? 'Génération des questions…' : 'Démarrer un entretien' }}
+      </button>
+    </section>
+
+    <section class="history" aria-labelledby="history-heading">
+      <h2 id="history-heading">Mes préparations précédentes</h2>
+      @for (session of sessions(); track session.id) {
+        <button class="history-item" type="button" (click)="openSession(session.id)">
+          <span>
+            <strong>{{ session.offreTitre }}</strong>
+            <small>{{ session.dateCreation | date:'dd/MM/yyyy à HH:mm' }} · {{ session.questions.length }} questions</small>
+          </span>
+          <span class="history-result">
+            {{ session.statut === 'TERMINEE' ? session.scoreGlobal + '/100' : 'En cours' }}
+          </span>
+        </button>
+      } @empty {
+        <p class="empty">Vous n’avez pas encore de session de préparation.</p>
+      }
+    </section>
+  }
+</main>

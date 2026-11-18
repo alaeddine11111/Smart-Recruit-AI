@@ -4,6 +4,8 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { OffreService } from '../../../core/offre.service';
 import { EntrepriseService } from '../../../core/entreprise.service';
 import { Entreprise, OffreEmploi } from '../../../core/offers.models';
+import { CandidatureService } from '../../../core/candidature.service';
+import { HttpErrorResponse } from '@angular/common/http';
 
 @Component({
   selector: 'app-offer-detail',
@@ -26,8 +28,18 @@ import { Entreprise, OffreEmploi } from '../../../core/offers.models';
       <p class="whitespace-pre-line">{{ o.description }}</p>
       <p class="text-sm text-gray-500 mt-4">Published {{ o.datePublication | date:'dd/MM/yyyy' }}</p>
 
-      <!-- Hook for the next module (applications): [routerLink]="['/candidature', o.id]" -->
-      <button class="bg-blue-600 text-white rounded px-4 py-2 mt-6" disabled title="Applications module coming next">Apply</button>
+      <button
+        type="button"
+        class="bg-blue-600 text-white rounded px-4 py-2 mt-6 disabled:opacity-50"
+        (click)="apply()"
+        [disabled]="applying() || applied()">
+        {{ applying() ? 'Applying...' : applied() ? 'Applied' : 'Apply' }}
+      </button>
+      @if (applicationMessage()) {
+        <p class="mt-3" [class.text-red-600]="applicationError()" [class.text-green-700]="!applicationError()" role="alert">
+          {{ applicationMessage() }}
+        </p>
+      }
 
       @if (company(); as c) {
         <div class="border rounded p-4 mt-8">
@@ -43,16 +55,52 @@ export class OfferDetailComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private offres = inject(OffreService);
   private entreprises = inject(EntrepriseService);
+  private candidatures = inject(CandidatureService);
 
   offer = signal<OffreEmploi | null>(null);
   company = signal<Entreprise | null>(null);
   notFound = signal(false);
+  applying = signal(false);
+  applied = signal(false);
+  applicationError = signal(false);
+  applicationMessage = signal('');
 
   ngOnInit() {
     const id = this.route.snapshot.paramMap.get('id')!;
     this.offres.getPublished(id).subscribe({
       next: o => { this.offer.set(o); this.entreprises.getById(o.entrepriseId).subscribe(c => this.company.set(c)); },
       error: () => this.notFound.set(true)
+    });
+  }
+
+  apply() {
+    const offer = this.offer();
+    if (!offer || this.applying() || this.applied()) return;
+
+    this.applying.set(true);
+    this.applicationError.set(false);
+    this.applicationMessage.set('');
+    this.candidatures.apply(offer.id).subscribe({
+      next: () => {
+        this.applying.set(false);
+        this.applied.set(true);
+        this.applicationMessage.set('Application submitted successfully.');
+      },
+      error: (error: HttpErrorResponse) => {
+        this.applying.set(false);
+        this.applicationError.set(true);
+        if (error.status === 409) {
+          this.applied.set(true);
+          this.applicationMessage.set('You have already applied to this offer.');
+        } else if (error.status === 401 || error.status === 403) {
+          this.applicationMessage.set('Please sign in as a candidate to apply.');
+        } else if (error.status === 404) {
+          this.notFound.set(true);
+          this.applicationMessage.set('This offer is no longer available.');
+        } else {
+          this.applicationMessage.set(error.error?.detail || 'Unable to submit your application. Please try again.');
+        }
+      }
     });
   }
 }

@@ -1,15 +1,17 @@
 import { Component, DestroyRef, inject, signal } from '@angular/core';
-import { DatePipe, JsonPipe } from '@angular/common';
+import { DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { forkJoin } from 'rxjs';
 import { AuthService } from '../../core/auth.service';
 import { ProfilService } from '../../core/profil.service';
 import { Profil, User } from '../../core/models';
+import { CandidatureService } from '../../core/candidature.service';
+import { RecruiterApplicationStats } from '../../core/offers.models';
 
 @Component({
   selector: 'app-dashboard',
-  imports: [DatePipe, JsonPipe, RouterLink],
+  imports: [DatePipe, RouterLink],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.css',
 })
@@ -17,6 +19,7 @@ export class Dashboard {
   readonly auth = inject(AuthService);
   readonly user = this.auth.user;
   private readonly profilService = inject(ProfilService);
+  private readonly candidatureService = inject(CandidatureService);
   private readonly destroyRef = inject(DestroyRef);
 
   readonly me = signal<User | null>(null);
@@ -25,6 +28,9 @@ export class Dashboard {
   readonly candidateProfile = signal<Profil | null>(null);
   readonly candidateLoading = signal(false);
   readonly candidateError = signal<string | null>(null);
+  readonly recruiterStats = signal<RecruiterApplicationStats | null>(null);
+  readonly recruiterStatsLoading = signal(false);
+  readonly recruiterStatsError = signal<string | null>(null);
 
   constructor() {
     const role = this.user()?.role;
@@ -47,6 +53,20 @@ export class Dashboard {
     } else {
       this.auth.me().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
         next: u => this.me.set(u),
+      });
+    }
+
+    if (role === 'RECRUTEUR') {
+      this.recruiterStatsLoading.set(true);
+      this.candidatureService.recruiterStats().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+        next: stats => {
+          this.recruiterStats.set(stats);
+          this.recruiterStatsLoading.set(false);
+        },
+        error: () => {
+          this.recruiterStatsError.set('Impossible de charger les statistiques des candidatures.');
+          this.recruiterStatsLoading.set(false);
+        }
       });
     }
 

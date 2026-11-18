@@ -54,6 +54,61 @@ export interface PageResponse<T> {
   totalPages: number;
 }
 
+export type ApplicationStatus = 'PENDING' | 'ACCEPTED' | 'REJECTED';
+
+export interface Candidature {
+  id: string;
+  offreId: string;
+  dateCandidature: string;
+  statut: ApplicationStatus;
+  offre: OffreEmploi | null;
+}
+
+export interface CandidatureExterne {
+  id: string;
+  offreId: string;
+  titre: string;
+  entreprise: string | null;
+  urlExterne: string;
+  source: string;
+  dateClic: string;
+  statut: 'REDIRECTED';
+}
+
+export interface CandidatureExterneRequest {
+  offreId: string;
+  titre: string;
+  entreprise?: string;
+  urlExterne: string;
+  source: string;
+}
+
+export interface RecruiterCandidature {
+  id: string;
+  candidateEmail: string;
+  offreId: string;
+  dateCandidature: string;
+  statut: ApplicationStatus;
+  offre: OffreEmploi;
+}
+
+export interface OfferApplicationStats {
+  offreId: string;
+  titre: string;
+  total: number;
+  pending: number;
+  accepted: number;
+  rejected: number;
+}
+
+export interface RecruiterApplicationStats {
+  total: number;
+  pending: number;
+  accepted: number;
+  rejected: number;
+  offers: OfferApplicationStats[];
+}
+
 export interface ExternalOffre {
   id: string;
   titre: string;

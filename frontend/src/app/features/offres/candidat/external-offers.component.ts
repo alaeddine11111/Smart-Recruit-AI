@@ -35,10 +35,14 @@ import { ExternalOffre } from '../../../core/offers.models';
           <p class="text-sm text-gray-600">{{ o.entreprise }} · {{ o.localisation }} · via {{ o.source }}</p>
           <p class="text-sm mt-2 line-clamp-3">{{ o.description }}</p>
           <a [href]="o.urlExterne" target="_blank" rel="noopener noreferrer"
+             (click)="trackApplication(o)"
              class="inline-block mt-3 border border-blue-600 text-blue-700 rounded px-3 py-1">Apply on {{ o.source }}</a>
         </article>
       }
     </div>
+    @if (trackingError()) {
+      <p class="mt-4 text-red-700" role="alert">{{ trackingError() }}</p>
+    }
   </section>`
 })
 export class ExternalOffersComponent {
@@ -49,6 +53,7 @@ export class ExternalOffersComponent {
   results = signal<ExternalOffre[]>([]);
   loading = signal(false);
   searched = signal(false);
+  trackingError = signal('');
 
   search() {
     const { q, location } = this.form.getRawValue();
@@ -56,6 +61,19 @@ export class ExternalOffersComponent {
     this.svc.search(q, location).subscribe({
       next: r => { this.results.set(r); this.loading.set(false); this.searched.set(true); },
       error: () => { this.results.set([]); this.loading.set(false); this.searched.set(true); }
+    });
+  }
+
+  trackApplication(offer: ExternalOffre) {
+    this.trackingError.set('');
+    this.svc.trackApplication({
+      offreId: offer.id,
+      titre: offer.titre,
+      entreprise: offer.entreprise,
+      urlExterne: offer.urlExterne,
+      source: offer.source
+    }).subscribe({
+      error: () => this.trackingError.set('The offer opened, but this click could not be saved to your application history.')
     });
   }
 }

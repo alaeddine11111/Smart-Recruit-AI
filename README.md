@@ -112,11 +112,12 @@ Spring configuration is in each service's `src/main/resources/application.yml`. 
 | `ADMIN_EMAIL` | auth-service | First admin account | `admin@smartrecruit.tn` |
 | `ADMIN_PASSWORD` | auth-service | First admin password | `Admin@12345` |
 | `UPLOADS_DIR` | cv-service | Directory for uploaded PDF files | `./uploads` (relative to service working directory) |
-| `OCR_URL` | cv-service | OCR service base URL | `http://localhost:8083` |
-| `GEMINI_API_KEY` | ocr-service | Personal Gemini API key | Required for Gemini analysis |
+| `OCR_URL` | cv-service | OCR and interview AI service base URL | `http://localhost:8083` |
+| `GEMINI_API_KEY` | ocr-service | Personal Gemini API key | Required for Gemini analysis and interview preparation |
 | `GEMINI_MODEL` | ocr-service | Gemini model name | `gemini-3.8-flash` |
 | `GEMINI_FALLBACK_MODELS` | ocr-service | Comma-separated fallback model names | Empty |
 | `MONGODB_URI` | offer-service | MongoDB connection | `mongodb://localhost:27017/smartrecruit_offers` |
+| `OFFER_SERVICE_URL` | auth-service and cv-service | offer-service URL for application-scoped recruiter candidate lookups | `http://localhost:8084` |
 | `JWT_SECRET` | offer-service | Must be the same value as in auth-service and cv-service | Development key in `application.yml` |
 | `OCR_URL` | offer-service | OCR service base URL, used to translate external offers | `http://localhost:8083` |
 | `JOOBLE_API_KEY` | offer-service | Optional Jooble key (the Jooble provider is disabled by default) | Empty |
@@ -127,6 +128,7 @@ Spring configuration is in each service's `src/main/resources/application.yml`. 
 - **Never commit secrets.** Do not put a Gemini key, a database password or a real JWT secret in a file that goes to GitHub. If a key is ever pasted somewhere public, delete it in Google AI Studio and create a new one.
 - Everyone uses their **own** Gemini key.
 - The content of an uploaded CV is sent to Google's Gemini API for analysis. This is fine for the project, but it is personal data, so use test CVs when you can.
+- Interview question generation uses validated profile skills, experience, education, and (when selected) the public offer description and required skills. Candidate answers are sent to Gemini for per-answer and final feedback; use test data when possible.
 - `ocr-service` has no authentication yet. Do not expose it outside your own machine.
 - The title and description of external job ads are sent to Google's Gemini API (through `ocr-service` `/translate`) to be translated to English. They are public job ads, not personal data.
 - Uploaded CV PDFs are stored on disk; MongoDB contains their metadata, not the PDF bytes. Keep the upload directory out of Git (`uploads/` is ignored).
@@ -136,7 +138,7 @@ Spring configuration is in each service's `src/main/resources/application.yml`. 
 | Role | How it is created | Access |
 |------|-------------------|--------|
 | `CANDIDAT` | Public registration | Own profile and CV |
-| `RECRUTEUR` | Public registration (creates or joins a company) | Offers and applications (coming) |
+| `RECRUTEUR` | Public registration (creates or joins a company) | Own offers and their applications |
 | `ADMIN` | Seeded at startup, never through registration | `/api/admin/**` |
 
 ## API
@@ -167,6 +169,18 @@ All endpoints require a valid bearer token.
 | POST | `/api/profil/valider` | Mark the profile as validated |
 
 MongoDB stores CV metadata in `cvs`, profile data in `profils`, and OCR analysis status/results in `analyses` (database `smartrecruit_cv` by default). Uploaded PDF bytes are stored on disk. Profile skills detected by OCR are in `competencesDetectees`; candidate-approved skills are in `competencesValidees`. Legacy `competences` values are preserved separately because their origin cannot be determined reliably.
+
+Interview preparation is stored in the same database in `sessions_preparation`. Only authenticated candidates can create, access, answer, and finish their own sessions. Answer submissions are evaluated by Gemini before being saved; finishing a session requires every answer to have a successful evaluation.
+
+| Method | Endpoint | Access | Description |
+|--------|----------|--------|-------------|
+| POST | `/api/preparations` | Candidate | Start a general session with `{ "offreId": null }`, or a targeted session with a published offer ID |
+| GET | `/api/preparations` | Candidate | List the candidate's sessions, newest first |
+| GET | `/api/preparations/{id}` | Session owner | Resume or review a session |
+| PUT | `/api/preparations/{id}/reponses` | Session owner | Evaluate and save one answer: `{ "questionId": "...", "reponse": "..." }` (maximum 5,000 characters) |
+| POST | `/api/preparations/{id}/terminer` | Session owner | Finish after all answers are evaluated; returns overall mean score and AI-generated final feedback |
+
+Interview questions and feedback use the existing `ocr-service` Gemini client and `GEMINI_MODEL`; there is no hardcoded question, evaluation, or score fallback. AI outages return an error and do not save an unevaluated answer or finish a session.
 
 ### cv-service matching (port 8082)
 
@@ -254,6 +268,52 @@ How translation works:
 - Remotive and Arbeitnow downloads are cached in memory (6 hours and 1 hour) to respect their rate limits. Every listing keeps its source name and link back to the original posting.
 - Set `external-jobs.translation.enabled: false` to disable translation.
 
+### Candidate applications (offer-service)
+
+Applications are stored separately in the `candidatures` collection of the
+`smartrecruit_offers` database. A candidature contains the authenticated
+candidate identity, offer ID, application date and one of three statuses:
+`PENDING`, `ACCEPTED` or `REJECTED` (new applications start at `PENDING`).
+The MongoDB compound index prevents the same candidate from applying twice to
+the same offer.
+
+| Method | Endpoint | Access | Description |
+|--------|----------|--------|-------------|
+| POST | `/api/candidatures/{offreId}` | Candidate | Apply to a published internal offer |
+| GET | `/api/candidatures/mes` | Candidate | List the current candidate's applications with offer information |
+| GET | `/api/candidatures/{id}` | Candidate owner | Get one application owned by the current candidate |
+
+To test the feature, sign in as a candidate, open `/offres/{id}` and click
+`Apply`. Then open `/mes-candidatures` to see the application history and status.
+A second apply attempt should return `409 Conflict`; draft, closed or nonexistent
+offers should return `404 Not Found`.
+
+External-offer clicks are tracked separately in `candidatures_externes`; this
+records the candidate, offer details, platform, original URL, click time and
+`REDIRECTED` status. `POST /api/candidatures/externes` records a redirect and
+`GET /api/candidatures/externes` lists redirects for the authenticated candidate.
+This only confirms that SmartRecruit opened the external link, not that an
+application was submitted or accepted by the external platform.
+
+### Recruiter application management
+
+Recruiter endpoints use the authenticated recruiter's JWT identity and only
+return applications for offers they own. Admins retain the existing admin
+override. Application review updates only the internal candidature status.
+
+| Method | Endpoint | Access | Description |
+|--------|----------|--------|-------------|
+| GET | `/api/recruteur/candidatures/stats` | Recruiter, admin | Counts by status and offer |
+| GET | `/api/recruteur/candidatures?offreId=&statut=&candidate=` | Recruiter, admin | Applications for owned offers |
+| GET | `/api/recruteur/candidatures/{id}` | Owning recruiter, admin | Application and offer details |
+| PATCH | `/api/recruteur/candidatures/{id}/statut` | Owning recruiter, admin | Update to `PENDING`, `ACCEPTED` or `REJECTED` |
+| GET | `/api/recruteur/candidatures/{id}/candidate` | Owning recruiter, admin | Candidate identity used by the profile services for authorization |
+
+The auth and CV services also expose application-scoped candidate lookups under
+`/api/recruteur/candidatures/{id}`. They verify ownership with `offer-service`
+before returning candidate contact, profile or CV metadata. CV contents remain
+stored as before; no download endpoint is added.
+
 ### ocr-service (port 8083)
 
 | Method | Endpoint | Description |
@@ -279,6 +339,8 @@ Errors: `400` not a PDF, `422` unreadable PDF, `429` free Gemini limit reached, 
 | `/recruteur/offres/new` and `/recruteur/offres/:id/edit` | Post or edit an offer |
 | `/offres/:id` | Published offer detail with the company card |
 | `/offres/externes` | External offers (Remotive, Arbeitnow), translated to English, with an "Apply" link to the original site |
+| `/recruteur/candidatures` | Recruiter application list with offer/status filters |
+| `/recruteur/candidatures/:id` | Recruiter application details, candidate information and status actions |
 
 ## Status
 
@@ -294,7 +356,7 @@ Errors: `400` not a PDF, `422` unreadable PDF, `429` free Gemini limit reached, 
 - [x] Job offers: publish (recruiter), browse (candidate)
 - [x] External job offers (Remotive, Arbeitnow) with automatic translation to English
 - [x] Skills endpoints on `offer-service` for AI skill matching
-- [ ] Applications and status tracking
+- [x] Applications and status tracking
 - [ ] Interview preparation
 - [ ] Recruiter and administrator dashboards
 

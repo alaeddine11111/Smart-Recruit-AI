@@ -20,6 +20,8 @@
           <p>Voici les informations enregistrées dans votre profil.</p>
           <nav class="candidate-actions" aria-label="Espace candidat">
             <a class="edit-link" routerLink="/offres">Consulter les offres d’emploi</a>
+            <a class="edit-link" routerLink="/mes-candidatures">Mes candidatures</a>
+            <a class="edit-link" routerLink="/preparation-entretien">Préparer un entretien</a>
             <a class="edit-link" routerLink="/mon-cv">Modifier mon profil</a>
           </nav>
         </div>
@@ -90,8 +92,32 @@
       <nav class="recruiter-actions" aria-label="Espace recruteur">
         <a class="edit-link" routerLink="/recruteur/entreprise">Profil de l’entreprise</a>
         <a class="edit-link" routerLink="/recruteur/offres">Mes offres</a>
+        <a class="edit-link" routerLink="/recruteur/candidatures">Candidatures reçues</a>
         <a class="edit-link" routerLink="/recruteur/offres/new">Publier une offre</a>
       </nav>
+      @if (recruiterStatsLoading()) {
+        <p class="status" role="status">Chargement des statistiques des candidatures…</p>
+      } @else if (recruiterStatsError()) {
+        <p class="err status" role="alert">{{ recruiterStatsError() }}</p>
+      } @else if (recruiterStats(); as stats) {
+        <section class="application-overview" aria-label="Vue d’ensemble des candidatures">
+          <div class="application-count"><strong>{{ stats.total }}</strong><span>Total</span></div>
+          <div class="application-count"><strong>{{ stats.pending }}</strong><span>En attente</span></div>
+          <div class="application-count"><strong>{{ stats.accepted }}</strong><span>Acceptées</span></div>
+          <div class="application-count"><strong>{{ stats.rejected }}</strong><span>Refusées</span></div>
+        </section>
+        <section class="profile-card">
+          <h2>Candidatures par offre</h2>
+          @for (offer of stats.offers; track offer.offreId) {
+            <p class="offer-application-summary">
+              <strong>{{ offer.titre }}</strong>
+              <span>{{ offer.total }} total · {{ offer.pending }} en attente · {{ offer.accepted }} acceptées · {{ offer.rejected }} refusées</span>
+            </p>
+          } @empty {
+            <p class="empty">Aucune offre ni candidature enregistrée.</p>
+          }
+        </section>
+      }
     }
         @case ('ADMIN') {
       <p>Votre espace administrateur. Voici les comptes de la plateforme.</p>
@@ -99,11 +125,6 @@
         <a class="edit-link" routerLink="/admin/demandes">Demandes de comptes recruteur</a>
       </nav>
     }
-  }
-
-  @if (user()?.role !== 'CANDIDAT') {
-    <h2>Réponse de /api/auth/me</h2>
-    <pre>{{ me() | json }}</pre>
   }
 
   @if (users(); as list) {

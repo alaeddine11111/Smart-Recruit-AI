@@ -10,4 +10,5 @@ import java.util.Optional;
 public interface OffreEmploiRepository extends MongoRepository<OffreEmploi, String>, OffreEmploiRepositoryCustom {
     Optional<OffreEmploi> findByIdAndStatut(String id, OfferStatus statut);
     List<OffreEmploi> findByEntrepriseId(String entrepriseId);
+    List<OffreEmploi> findByRecruteurId(String recruteurId);
 }

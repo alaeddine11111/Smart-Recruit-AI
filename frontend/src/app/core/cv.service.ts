@@ -16,6 +16,13 @@ export class CvService {
     );
   }
 
+  forApplication(applicationId: string): Observable<CvInfo | null> {
+    return this.http.get<CvInfo>(
+      `http://localhost:8082/api/recruteur/candidatures/${encodeURIComponent(applicationId)}/cv`).pipe(
+      catchError((e: HttpErrorResponse) => (e.status === 404 ? of(null) : throwError(() => e))),
+    );
+  }
+
   /** Uploads a new CV (replaces the previous one) and reports progress. */
   upload(file: File): Observable<HttpEvent<CvInfo>> {
     const body = new FormData();

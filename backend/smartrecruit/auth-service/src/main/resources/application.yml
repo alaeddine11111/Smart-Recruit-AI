@@ -20,3 +20,4 @@ app:
     password: ${ADMIN_PASSWORD:Admin@12345}
   cors:
     allowed-origins: http://localhost:4200
+  offer-service-url: ${OFFER_SERVICE_URL:http://localhost:8084}

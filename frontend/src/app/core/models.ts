@@ -8,6 +8,13 @@ export interface User {
   dateCreation: string;
 }
 
+export interface RecruiterCandidate {
+  nom: string;
+  email: string;
+  telephone: string | null;
+  localisation: string | null;
+}
+
 export interface AuthResponse {
   token: string;
   tokenType: string;
