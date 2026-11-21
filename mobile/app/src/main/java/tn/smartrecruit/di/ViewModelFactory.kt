@@ -10,6 +10,7 @@ import tn.smartrecruit.SmartRecruitApp
 import tn.smartrecruit.ui.screens.auth.LoginViewModel
 import tn.smartrecruit.ui.screens.auth.RegisterViewModel
 import tn.smartrecruit.ui.screens.auth.SessionViewModel
+import tn.smartrecruit.ui.screens.cv.CvViewModel
 import tn.smartrecruit.ui.screens.profile.ProfileViewModel
 
 class ViewModelFactory(private val container: AppContainer) : ViewModelProvider.Factory {
@@ -19,6 +20,7 @@ class ViewModelFactory(private val container: AppContainer) : ViewModelProvider.
         modelClass.isAssignableFrom(RegisterViewModel::class.java) -> RegisterViewModel(container.authRepository)
         modelClass.isAssignableFrom(SessionViewModel::class.java) -> SessionViewModel(container.authRepository)
         modelClass.isAssignableFrom(ProfileViewModel::class.java) -> ProfileViewModel(container.profileRepository)
+        modelClass.isAssignableFrom(CvViewModel::class.java) -> CvViewModel(container.cvRepository)
         else -> throw IllegalArgumentException("Unknown ViewModel: ${modelClass.name}")
     } as T
 }

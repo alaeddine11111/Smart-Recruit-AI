@@ -44,6 +44,7 @@ import tn.smartrecruit.di.appViewModelFactory
 import tn.smartrecruit.ui.screens.auth.SessionViewModel
 import tn.smartrecruit.ui.theme.TextMuted
 import tn.smartrecruit.ui.screens.profile.ProfileScreen
+import tn.smartrecruit.ui.screens.cv.CvScreen
 
 /** The 5 bottom tabs of the candidate app (enum with properties). */
 enum class CandidateTab(val route: String, val label: String, val icon: ImageVector) {
@@ -84,6 +85,7 @@ fun CandidateMainScreen(onLoggedOut: () -> Unit) {
                         Icon(Icons.Filled.MoreVert, contentDescription = "Menu")
                     }
                     DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
+                        DropdownMenuItem(text = { Text("Mon CV") }, onClick = { menuOpen = false; inner.navigate("cv") })
                         DropdownMenuItem(text = { Text("Mon profil") }, onClick = { menuOpen = false; goTo(CandidateTab.PROFILE) })
                         DropdownMenuItem(text = { Text("Déconnexion") }, onClick = {
                             menuOpen = false
@@ -112,6 +114,7 @@ fun CandidateMainScreen(onLoggedOut: () -> Unit) {
             composable(CandidateTab.APPLICATIONS.route) { Placeholder("Applications", "My applications and their status (next step).") }
             composable(CandidateTab.INTERVIEW.route) { Placeholder("Interview", "AI interview preparation (later).") }
             composable(CandidateTab.PROFILE.route) { ProfileScreen(onLoggedOut = onLoggedOut) }
+            composable("cv") { CvScreen() }
         }
     }
 }
