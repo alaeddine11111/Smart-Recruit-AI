@@ -49,8 +49,12 @@ The auth API starts at `http://localhost:8081`. The first run creates the `smart
 
 ```powershell
 cd backend\smartrecruit\cv-service
+$env:GROQ_API_KEY = "your-actual-groq-api-key"
+$env:GROQ_MODEL = "openai/gpt-oss-20b"
+$env:GROQ_FALLBACK_MODELS = "openai/gpt-oss-120b,llama-3.1-8b-instant"
 .\mvnw.cmd spring-boot:run
 ```
+get the api key from https://console.groq.com/home 
 
 The CV API starts at `http://localhost:8082`. Installed Maven can also be used with `mvn spring-boot:run`.
 

@@ -24,3 +24,7 @@ app:
   uploads-dir: ${UPLOADS_DIR:./uploads}
   ocr-url: ${OCR_URL:http://localhost:8083}
   offer-service-url: ${OFFER_SERVICE_URL:http://localhost:8084}
+  groq:
+    api-key: ${GROQ_API_KEY:}
+    model: ${GROQ_MODEL:}
+    fallback-models: ${GROQ_FALLBACK_MODELS:}
