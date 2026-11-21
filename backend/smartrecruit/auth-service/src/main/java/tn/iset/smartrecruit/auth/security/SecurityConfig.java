@@ -40,7 +40,7 @@ public class SecurityConfig {
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(a -> a
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/api/auth/register/**", "/api/auth/login").permitAll()
+                        .requestMatchers("/api/auth/register/**", "/api/auth/login", "/api/auth/keycloak").permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/recruteur/**").hasAnyRole("RECRUTEUR", "ADMIN")
                         .anyRequest().authenticated())

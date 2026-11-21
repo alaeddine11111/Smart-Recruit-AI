@@ -20,4 +20,15 @@ app:
     password: ${ADMIN_PASSWORD:Admin@12345}
   cors:
     allowed-origins: http://localhost:4200
+  keycloak:
+    # Keycloak is only used by the mobile app. Disabled by default: the web flow is unchanged.
+    enabled: ${KEYCLOAK_ENABLED:false}
+    server-url: ${KEYCLOAK_URL:http://localhost:8180}
+    realm: ${KEYCLOAK_REALM:smartrecruit}
+    admin-client-id: ${KEYCLOAK_ADMIN_CLIENT_ID:smartrecruit-backend}
+    # Never commit the secret: set the KEYCLOAK_ADMIN_CLIENT_SECRET environment variable.
+    admin-client-secret: ${KEYCLOAK_ADMIN_CLIENT_SECRET:}
+    # Simplest for development: the Keycloak master admin (admin-cli). Set the password only in your terminal.
+    admin-username: ${KEYCLOAK_ADMIN_USER:admin}
+    admin-password: ${KEYCLOAK_ADMIN_PASSWORD:}
   offer-service-url: ${OFFER_SERVICE_URL:http://localhost:8084}

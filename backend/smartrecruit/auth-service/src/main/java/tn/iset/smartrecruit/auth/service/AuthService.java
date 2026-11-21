@@ -11,6 +11,9 @@ import tn.iset.smartrecruit.auth.repository.DemandeRecruteurRepository;
 import tn.iset.smartrecruit.auth.repository.EntrepriseRepository;
 import tn.iset.smartrecruit.auth.repository.UtilisateurRepository;
 import tn.iset.smartrecruit.auth.security.JwtService;
+import tn.iset.smartrecruit.auth.security.KeycloakTokenVerifier;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.jwt.JwtException;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -24,6 +27,8 @@ public class AuthService {
     private final DemandeRecruteurRepository demandeRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final KeycloakAdminService keycloakAdminService;
+    private final KeycloakTokenVerifier keycloakTokenVerifier;
 
     // ---------------------------------------------------------------- registration
 
@@ -37,7 +42,9 @@ public class AuthService {
         c.setMotDePasseHash(passwordEncoder.encode(req.motDePasse()));
         c.setTelephone(req.telephone());
         c.setLocalisation(req.localisation());
-        return toResponse(utilisateurRepository.save(c));
+        Candidat saved = utilisateurRepository.save(c);
+        keycloakAdminService.createUser(email, saved.getNom(), req.motDePasse(), Role.CANDIDAT.name(), true);
+        return toResponse(saved);
     }
 
     /** A recruiter does not get an account right away: we store a request for the admin. */
@@ -54,6 +61,8 @@ public class AuthService {
         d.setEntrepriseDescription(req.entrepriseDescription());
         d.setEntrepriseSiteWeb(req.entrepriseSiteWeb());
         demandeRepository.save(d);
+        // Keycloak user created disabled and without role: the admin decision enables it or deletes it
+        keycloakAdminService.createUser(email, d.getNom(), req.motDePasse(), null, false);
 
         return new MessageResponse(
                 "Votre demande a bien été envoyée. Un administrateur va l'examiner, "
@@ -68,6 +77,7 @@ public class AuthService {
         var user = utilisateurRepository.findByEmail(email);
         if (user.isPresent()) {
             if (passwordEncoder.matches(req.motDePasse(), user.get().getMotDePasseHash())) {
+                keycloakAdminService.syncOnLogin(user.get(), req.motDePasse());
                 return toResponse(user.get());
             }
             throw badCredentials();
@@ -93,10 +103,88 @@ public class AuthService {
         throw badCredentials();
     }
 
+    /**
+     * Mobile login through Keycloak: the app sends the access token it got from Keycloak, we verify it
+     * and return the normal SmartRecruit JWT, so the other services do not change.
+     */
+    public AuthResponse loginWithKeycloak(String accessToken) {
+        if (!keycloakAdminService.isEnabled()) {
+            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Keycloak n'est pas activé sur ce serveur");
+        }
+        Jwt jwt;
+        try {
+            jwt = keycloakTokenVerifier.verify(accessToken);
+        } catch (JwtException e) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Jeton Keycloak invalide ou expiré");
+        }
+        String email = jwt.getClaimAsString("email");
+        if (email == null || email.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Le jeton Keycloak ne contient pas d'email");
+        }
+        Utilisateur user = utilisateurRepository.findByEmail(normalize(email))
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.FORBIDDEN,
+                        "Aucun compte SmartRecruit ne correspond à cet utilisateur Keycloak"));
+        return toResponse(user);
+    }
+
     public UserResponse me(String email) {
         return utilisateurRepository.findByEmail(email)
                 .map(UserResponse::from)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Utilisateur introuvable"));
+    }
+
+    // ---------------------------------------------------------------- profile
+
+    public ProfileResponse getProfile(String email) {
+        return toProfile(findUser(email));
+    }
+
+    public ProfileResponse updateProfile(String email, UpdateProfileRequest req) {
+        Utilisateur u = findUser(email);
+        u.setNom(req.nom().trim());
+        if (u instanceof Candidat c) {
+            c.setTelephone(req.telephone());
+            c.setLocalisation(req.localisation());
+        } else if (u instanceof Recruteur r) {
+            r.setPoste(req.poste());
+        }
+        return toProfile(utilisateurRepository.save(u));
+    }
+
+    public void changePassword(String email, ChangePasswordRequest req) {
+        Utilisateur u = findUser(email);
+        if (!passwordEncoder.matches(req.ancienMotDePasse(), u.getMotDePasseHash())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Mot de passe actuel incorrect");
+        }
+        u.setMotDePasseHash(passwordEncoder.encode(req.nouveauMotDePasse()));
+        utilisateurRepository.save(u);
+    }
+
+    private Utilisateur findUser(String email) {
+        return utilisateurRepository.findByEmail(email)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Utilisateur introuvable"));
+    }
+
+    private ProfileResponse toProfile(Utilisateur u) {
+        String telephone = null, localisation = null, poste = null;
+        String entrepriseNom = null, entrepriseDescription = null, entrepriseSiteWeb = null;
+
+        if (u instanceof Candidat c) {
+            telephone = c.getTelephone();
+            localisation = c.getLocalisation();
+        } else if (u instanceof Recruteur r) {
+            poste = r.getPoste();
+            Entreprise e = r.getEntrepriseId() == null
+                    ? null
+                    : entrepriseRepository.findById(r.getEntrepriseId()).orElse(null);
+            if (e != null) {
+                entrepriseNom = e.getNom();
+                entrepriseDescription = e.getDescription();
+                entrepriseSiteWeb = e.getSiteWeb();
+            }
+        }
+        return new ProfileResponse(u.getId(), u.getNom(), u.getEmail(), u.getRole(), u.getDateCreation(),
+                telephone, localisation, poste, entrepriseNom, entrepriseDescription, entrepriseSiteWeb);
     }
 
     // ---------------------------------------------------------------- admin
@@ -136,6 +224,7 @@ public class AuthService {
         r.setPoste(d.getPoste());
         r.setEntrepriseId(entreprise.getId());
         utilisateurRepository.save(r);
+        keycloakAdminService.enableAndAssignRole(d.getEmail(), Role.RECRUTEUR.name());
 
         d.setStatut(StatutDemande.ACCEPTEE);
         d.setDateTraitement(LocalDateTime.now());
@@ -145,6 +234,7 @@ public class AuthService {
     public DemandeRecruteurResponse refuserDemande(String id, String motif) {
         DemandeRecruteur d = findEnAttente(id);
         d.setStatut(StatutDemande.REFUSEE);
+        keycloakAdminService.deleteUser(d.getEmail());
         d.setMotifRefus(motif == null || motif.isBlank() ? null : motif.trim());
         d.setDateTraitement(LocalDateTime.now());
         return DemandeRecruteurResponse.from(demandeRepository.save(d));

@@ -32,8 +32,32 @@ public class AuthController {
         return authService.login(req);
     }
 
+    /** Mobile login: exchanges a Keycloak access token for the normal SmartRecruit JWT. */
+    @PostMapping("/keycloak")
+    public AuthResponse keycloakLogin(@Valid @RequestBody KeycloakLoginRequest req) {
+        return authService.loginWithKeycloak(req.accessToken());
+    }
+
     @GetMapping("/me")
     public UserResponse me(Authentication authentication) {
         return authService.me(authentication.getName());
+    }
+
+    @GetMapping("/profil")
+    public ProfileResponse profil(Authentication authentication) {
+        return authService.getProfile(authentication.getName());
+    }
+
+    @PutMapping("/profil")
+    public ProfileResponse updateProfil(Authentication authentication,
+                                        @Valid @RequestBody UpdateProfileRequest req) {
+        return authService.updateProfile(authentication.getName(), req);
+    }
+
+    @PutMapping("/mot-de-passe")
+    public MessageResponse changePassword(Authentication authentication,
+                                          @Valid @RequestBody ChangePasswordRequest req) {
+        authService.changePassword(authentication.getName(), req);
+        return new MessageResponse("Mot de passe modifié.");
     }
 }
