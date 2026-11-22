@@ -29,3 +29,4 @@ run.log
 .angular/
 **/.venv/
 **/uploads/
+mobile/.kotlin/

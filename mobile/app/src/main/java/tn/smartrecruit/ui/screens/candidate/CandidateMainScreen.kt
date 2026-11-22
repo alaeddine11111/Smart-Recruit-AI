@@ -1,6 +1,8 @@
 package tn.smartrecruit.ui.screens.candidate
 
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -29,22 +31,24 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import tn.smartrecruit.di.appViewModelFactory
 import tn.smartrecruit.ui.screens.auth.SessionViewModel
-import tn.smartrecruit.ui.theme.TextMuted
-import tn.smartrecruit.ui.screens.profile.ProfileScreen
 import tn.smartrecruit.ui.screens.cv.CvScreen
+import tn.smartrecruit.ui.screens.profile.ProfileScreen
+import tn.smartrecruit.ui.theme.TextMuted
 
 /** The 5 bottom tabs of the candidate app (enum with properties). */
 enum class CandidateTab(val route: String, val label: String, val icon: ImageVector) {
@@ -60,6 +64,8 @@ enum class CandidateTab(val route: String, val label: String, val icon: ImageVec
 fun CandidateMainScreen(onLoggedOut: () -> Unit) {
     val session: SessionViewModel = viewModel(factory = appViewModelFactory())
     val userName by session.userName.collectAsStateWithLifecycle()
+    val jobsViewModel: CandidateJobsViewModel = viewModel(factory = appViewModelFactory())
+    val jobsState by jobsViewModel.state.collectAsStateWithLifecycle()
 
     val inner = rememberNavController()
     val backStack by inner.currentBackStackEntryAsState()
@@ -98,11 +104,35 @@ fun CandidateMainScreen(onLoggedOut: () -> Unit) {
         bottomBar = {
             NavigationBar {
                 CandidateTab.entries.forEach { tab ->
+                    val isSelected = currentRoute == tab.route ||
+                            (tab == CandidateTab.JOBS && currentRoute?.startsWith("job_detail") == true)
+                    val labelText = if (tab == CandidateTab.JOBS && jobsState.jobSource != JobSource.ALL) {
+                        "Jobs (${if (jobsState.jobSource == JobSource.SITE) "Site" else "API"})"
+                    } else tab.label
+
                     NavigationBarItem(
-                        selected = currentRoute == tab.route,
+                        selected = isSelected,
                         onClick = { goTo(tab) },
-                        icon = { Icon(tab.icon, contentDescription = tab.label) },
-                        label = { Text(tab.label) }
+                        icon = {
+                            if (tab == CandidateTab.JOBS) {
+                                Box(
+                                    modifier = Modifier.pointerInput(Unit) {
+                                        detectTapGestures(
+                                            onTap = { goTo(tab) },
+                                            onLongPress = {
+                                                goTo(tab)
+                                                jobsViewModel.toggleJobSource()
+                                            }
+                                        )
+                                    }
+                                ) {
+                                    Icon(tab.icon, contentDescription = tab.label)
+                                }
+                            } else {
+                                Icon(tab.icon, contentDescription = tab.label)
+                            }
+                        },
+                        label = { Text(labelText) }
                     )
                 }
             }
@@ -110,7 +140,22 @@ fun CandidateMainScreen(onLoggedOut: () -> Unit) {
     ) { padding ->
         NavHost(inner, startDestination = CandidateTab.HOME.route, modifier = Modifier.padding(padding)) {
             composable(CandidateTab.HOME.route) { Placeholder("Hello, ${userName ?: ""}", "Profile progress, recommended jobs and recent application come next.") }
-            composable(CandidateTab.JOBS.route) { Placeholder("Jobs", "LazyColumn of offers + search/filters (next step).") }
+            composable(CandidateTab.JOBS.route) {
+                CandidateJobsScreen(
+                    onOfferClick = { offerId -> inner.navigate("job_detail/$offerId") },
+                    vm = jobsViewModel
+                )
+            }
+            composable(
+                route = "job_detail/{offerId}",
+                arguments = listOf(navArgument("offerId") { type = NavType.StringType })
+            ) { entry ->
+                val offerId = entry.arguments?.getString("offerId") ?: ""
+                JobDetailScreen(
+                    offerId = offerId,
+                    onBack = { inner.popBackStack() }
+                )
+            }
             composable(CandidateTab.APPLICATIONS.route) { Placeholder("Applications", "My applications and their status (next step).") }
             composable(CandidateTab.INTERVIEW.route) { Placeholder("Interview", "AI interview preparation (later).") }
             composable(CandidateTab.PROFILE.route) { ProfileScreen(onLoggedOut = onLoggedOut) }

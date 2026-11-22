@@ -7,6 +7,7 @@ import tn.smartrecruit.data.local.TokenStore
 import tn.smartrecruit.data.remote.ApiClient
 import tn.smartrecruit.data.repository.AuthRepository
 import tn.smartrecruit.data.repository.CvRepository
+import tn.smartrecruit.data.repository.OfferRepository
 import tn.smartrecruit.data.repository.ProfileRepository
 
 /** Manual dependency injection (course: "Injection manuelle : un conteneur d'application"). */
@@ -24,4 +25,6 @@ class AppContainer(context: Context) {
     val cvRepository: CvRepository by lazy {
         CvRepository(apiClient.cvApi, context.applicationContext.contentResolver)
     }
+
+    val offerRepository by lazy { OfferRepository(apiClient.offerApi) }
 }
