@@ -10,6 +10,7 @@ import tn.smartrecruit.data.remote.dto.PageDto
 import tn.smartrecruit.data.remote.dto.toOffreDto
 import tn.smartrecruit.data.remote.toOfferError
 import java.util.concurrent.ConcurrentHashMap
+import tn.smartrecruit.data.remote.dto.ExternalOffreDto
 
 class OfferRepository(private val api: OfferApi) {
 
@@ -111,6 +112,18 @@ class OfferRepository(private val api: OfferApi) {
         val offer = api.getPublicOffer(id)
         offerCache[offer.id] = offer
         offer
+    }
+
+    suspend fun getExternalOfferDtos(
+        q: String = "",
+        location: String = "",
+        page: Int = 1
+    ): Result<List<ExternalOffreDto>> = call {
+        api.getExternalOffers(
+            q = q.trim(),
+            location = location.trim(),
+            page = page
+        )
     }
 
     suspend fun getExternalOffers(

@@ -10,8 +10,11 @@ import retrofit2.http.Part
 import tn.smartrecruit.data.remote.dto.AnalysisDto
 import tn.smartrecruit.data.remote.dto.CandidateProfileDto
 import tn.smartrecruit.data.remote.dto.CvInfoDto
+import tn.smartrecruit.data.remote.dto.MatchingOfferDto
+import tn.smartrecruit.data.remote.dto.MatchingResultDto
 
 /** Retrofit interface describing cv-service (port 8082). */
+/**Retrofit is an Android library that allows your application to communicate with a backend through HTTP requests.*/
 interface CvApi {
     @GET("api/cv")
     suspend fun currentCv(): CvInfoDto            // 404 if the candidate has no CV yet
@@ -31,4 +34,9 @@ interface CvApi {
 
     @POST("api/profil/valider")
     suspend fun validateProfile(): CandidateProfileDto
+
+    @POST("api/matching")
+    suspend fun evaluateMatching(
+        @Body offers: List<MatchingOfferDto>
+    ): List<MatchingResultDto>
 }

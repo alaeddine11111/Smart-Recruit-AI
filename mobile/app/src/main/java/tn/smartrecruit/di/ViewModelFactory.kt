@@ -17,6 +17,7 @@ import tn.smartrecruit.ui.screens.profile.ProfileViewModel
 import tn.smartrecruit.ui.screens.recruiter.CompanyViewModel
 import tn.smartrecruit.ui.screens.recruiter.OfferFormViewModel
 import tn.smartrecruit.ui.screens.recruiter.OfferListViewModel
+import tn.smartrecruit.ui.screens.candidate.RecommendationsViewModel
 
 class ViewModelFactory(private val container: AppContainer) : ViewModelProvider.Factory {
     @Suppress("UNCHECKED_CAST")
@@ -31,6 +32,7 @@ class ViewModelFactory(private val container: AppContainer) : ViewModelProvider.
         modelClass.isAssignableFrom(OfferFormViewModel::class.java) -> OfferFormViewModel(container.offerRepository)
         modelClass.isAssignableFrom(CandidateJobsViewModel::class.java) -> CandidateJobsViewModel(container.offerRepository)
         modelClass.isAssignableFrom(JobDetailViewModel::class.java) -> JobDetailViewModel(container.offerRepository)
+        modelClass.isAssignableFrom(RecommendationsViewModel::class.java) -> RecommendationsViewModel(container.matchingRepository)
         else -> throw IllegalArgumentException("Unknown ViewModel: ${modelClass.name}")
     } as T
 }

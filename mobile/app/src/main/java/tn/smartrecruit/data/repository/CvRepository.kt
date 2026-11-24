@@ -14,6 +14,8 @@ import tn.smartrecruit.data.remote.dto.AnalysisDto
 import tn.smartrecruit.data.remote.dto.CandidateProfileDto
 import tn.smartrecruit.data.remote.dto.CvInfoDto
 import tn.smartrecruit.data.remote.toUserMessage
+import tn.smartrecruit.data.remote.dto.MatchingOfferDto
+import tn.smartrecruit.data.remote.dto.MatchingResultDto
 
 private const val MAX_SIZE = 5 * 1024 * 1024 // 5 MB, same limit as the backend
 
@@ -57,6 +59,14 @@ class CvRepository(
 
     suspend fun saveProfile(profile: CandidateProfileDto): Result<CandidateProfileDto> = try {
         Result.success(api.saveProfile(profile))
+    } catch (e: Exception) {
+        Result.failure(Exception(e.toUserMessage()))
+    }
+    
+    suspend fun evaluateMatching(
+        offers: List<MatchingOfferDto>
+    ): Result<List<MatchingResultDto>> = try {
+        Result.success(api.evaluateMatching(offers))
     } catch (e: Exception) {
         Result.failure(Exception(e.toUserMessage()))
     }

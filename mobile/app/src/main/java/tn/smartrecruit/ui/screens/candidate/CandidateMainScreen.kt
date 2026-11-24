@@ -156,7 +156,7 @@ fun CandidateMainScreen(onLoggedOut: () -> Unit) {
                     onBack = { inner.popBackStack() }
                 )
             }
-            composable(CandidateTab.APPLICATIONS.route) { Placeholder("Applications", "My applications and their status (next step).") }
+            composable(CandidateTab.APPLICATIONS.route) { RecommendationsScreen() }
             composable(CandidateTab.INTERVIEW.route) { Placeholder("Interview", "AI interview preparation (later).") }
             composable(CandidateTab.PROFILE.route) { ProfileScreen(onLoggedOut = onLoggedOut) }
             composable("cv") { CvScreen() }

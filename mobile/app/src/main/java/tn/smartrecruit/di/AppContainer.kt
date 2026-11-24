@@ -9,6 +9,7 @@ import tn.smartrecruit.data.repository.AuthRepository
 import tn.smartrecruit.data.repository.CvRepository
 import tn.smartrecruit.data.repository.OfferRepository
 import tn.smartrecruit.data.repository.ProfileRepository
+import tn.smartrecruit.data.repository.MatchingRepository
 
 /** Manual dependency injection (course: "Injection manuelle : un conteneur d'application"). */
 class AppContainer(context: Context) {
@@ -27,4 +28,11 @@ class AppContainer(context: Context) {
     }
 
     val offerRepository by lazy { OfferRepository(apiClient.offerApi) }
+
+        val matchingRepository by lazy {
+        MatchingRepository(
+            cvRepository = cvRepository,
+            offerRepository = offerRepository
+        )
+    }
 }

@@ -8,7 +8,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 object ApiConfig {
     // 10.0.2.2 = the PC from the Android emulator.
     // On a real phone: use the PC's LAN IP (e.g. http://192.168.1.20).
-    private const val HOST = "http://192.168.1.3"
+    private const val HOST = "http://172.20.10.8"
     const val AUTH_URL = "$HOST:8081/"
     const val CV_URL = "$HOST:8082/"
     const val OFFERS_URL = "$HOST:8084/"
