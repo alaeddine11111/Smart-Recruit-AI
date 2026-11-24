@@ -53,6 +53,7 @@ import tn.smartrecruit.ui.components.PrimaryButton
 import tn.smartrecruit.ui.screens.recruiter.formatSalary
 import tn.smartrecruit.ui.screens.recruiter.shortDate
 import tn.smartrecruit.ui.theme.TextMuted
+import tn.smartrecruit.ui.theme.TextPrimary
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -154,7 +155,7 @@ fun JobDetailScreen(
 
                         // Skills
                         if (offer.competences.isNotEmpty()) {
-                            Text("Compétences recherchées", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
+                            Text("Compétences recherchées", style = MaterialTheme.typography.titleMedium, color = TextPrimary)
                             FlowRow(
                                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                                 verticalArrangement = Arrangement.spacedBy(6.dp)
@@ -176,7 +177,7 @@ fun JobDetailScreen(
                         }
 
                         // Description
-                        Text("Description du poste", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
+                        Text("Description du poste", style = MaterialTheme.typography.titleMedium, color = TextPrimary)
                         Text(
                             offer.description,
                             style = MaterialTheme.typography.bodyLarge,
@@ -192,6 +193,7 @@ fun JobDetailScreen(
                             PrimaryButton(
                                 text = "Voir l'annonce originale sur le web",
                                 onClick = {
+                                    vm.trackExternalClick()
                                     runCatching {
                                         val intent = Intent(Intent.ACTION_VIEW, Uri.parse(offer.urlExterne))
                                         context.startActivity(intent)
@@ -207,7 +209,7 @@ fun JobDetailScreen(
                             ) {
                                 Icon(Icons.Default.CheckCircle, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(24.dp))
                                 Spacer(Modifier.size(8.dp))
-                                Text("Candidature envoyée !", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
+                                Text("Candidature envoyée !", style = MaterialTheme.typography.titleMedium, color = TextPrimary)
                             }
                         } else {
                             PrimaryButton(

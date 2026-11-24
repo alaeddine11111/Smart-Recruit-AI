@@ -10,7 +10,9 @@ import tn.smartrecruit.SmartRecruitApp
 import tn.smartrecruit.ui.screens.auth.LoginViewModel
 import tn.smartrecruit.ui.screens.auth.RegisterViewModel
 import tn.smartrecruit.ui.screens.auth.SessionViewModel
+import tn.smartrecruit.ui.screens.candidate.ApplicationsViewModel
 import tn.smartrecruit.ui.screens.candidate.CandidateJobsViewModel
+import tn.smartrecruit.ui.screens.candidate.InterviewPreparationViewModel
 import tn.smartrecruit.ui.screens.candidate.JobDetailViewModel
 import tn.smartrecruit.ui.screens.cv.CvViewModel
 import tn.smartrecruit.ui.screens.profile.ProfileViewModel
@@ -31,7 +33,15 @@ class ViewModelFactory(private val container: AppContainer) : ViewModelProvider.
         modelClass.isAssignableFrom(OfferListViewModel::class.java) -> OfferListViewModel(container.offerRepository)
         modelClass.isAssignableFrom(OfferFormViewModel::class.java) -> OfferFormViewModel(container.offerRepository)
         modelClass.isAssignableFrom(CandidateJobsViewModel::class.java) -> CandidateJobsViewModel(container.offerRepository)
-        modelClass.isAssignableFrom(JobDetailViewModel::class.java) -> JobDetailViewModel(container.offerRepository)
+        modelClass.isAssignableFrom(JobDetailViewModel::class.java) -> JobDetailViewModel(
+            container.offerRepository,
+            container.applicationRepository
+        )
+        modelClass.isAssignableFrom(ApplicationsViewModel::class.java) -> ApplicationsViewModel(container.applicationRepository)
+        modelClass.isAssignableFrom(InterviewPreparationViewModel::class.java) -> InterviewPreparationViewModel(
+            container.interviewPreparationRepository,
+            container.offerRepository
+        )
         modelClass.isAssignableFrom(RecommendationsViewModel::class.java) -> RecommendationsViewModel(container.matchingRepository)
         else -> throw IllegalArgumentException("Unknown ViewModel: ${modelClass.name}")
     } as T

@@ -9,11 +9,14 @@ import retrofit2.http.POST
 import retrofit2.http.PUT
 import retrofit2.http.Path
 import retrofit2.http.Query
+import tn.smartrecruit.data.remote.dto.CandidatureDto
+import tn.smartrecruit.data.remote.dto.CandidatureExterneDto
 import tn.smartrecruit.data.remote.dto.EntrepriseDto
 import tn.smartrecruit.data.remote.dto.ExternalOffreDto
 import tn.smartrecruit.data.remote.dto.OffreDto
 import tn.smartrecruit.data.remote.dto.OffreRequestDto
 import tn.smartrecruit.data.remote.dto.PageDto
+import tn.smartrecruit.data.remote.dto.TrackExternalApplicationRequestDto
 
 /**
  * Recruiter & Candidate offer endpoints (port 8084, ApiConfig.OFFERS_URL).
@@ -72,4 +75,17 @@ interface OfferApi {
         @Query("location") location: String = "",
         @Query("page") page: Int = 1
     ): List<ExternalOffreDto>
+
+    // --- candidate applications ---
+    @POST("api/candidatures/{offreId}")
+    suspend fun apply(@Path("offreId") offreId: String): CandidatureDto
+
+    @GET("api/candidatures/mes")
+    suspend fun myApplications(): List<CandidatureDto>
+
+    @GET("api/candidatures/externes")
+    suspend fun myExternalApplications(): List<CandidatureExterneDto>
+
+    @POST("api/candidatures/externes")
+    suspend fun trackExternalApplication(@Body request: TrackExternalApplicationRequestDto): CandidatureExterneDto
 }

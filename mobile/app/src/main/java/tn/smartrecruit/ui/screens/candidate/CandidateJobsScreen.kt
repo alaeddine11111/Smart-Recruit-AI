@@ -58,6 +58,8 @@ import tn.smartrecruit.ui.screens.recruiter.CONTRACT_TYPES
 import tn.smartrecruit.ui.screens.recruiter.formatSalary
 import tn.smartrecruit.ui.screens.recruiter.shortDate
 import tn.smartrecruit.ui.theme.TextMuted
+import tn.smartrecruit.ui.theme.TextPrimary
+import tn.smartrecruit.ui.theme.TextSecondary
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -98,7 +100,7 @@ fun CandidateJobsScreen(
                 Text(
                     "Offres d'emploi",
                     style = MaterialTheme.typography.headlineSmall,
-                    color = MaterialTheme.colorScheme.primary
+                    color = TextPrimary
                 )
                 // Source badge / info
                 Surface(
@@ -259,7 +261,7 @@ private fun CandidateJobCard(
                 Text(
                     offer.titre,
                     style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.primary,
+                    color = TextPrimary,
                     modifier = Modifier.weight(1f)
                 )
                 ContractBadge(offer.typeContrat)
@@ -268,7 +270,7 @@ private fun CandidateJobCard(
             if (!offer.entrepriseNom.isNullOrBlank()) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                     Icon(Icons.Default.Business, contentDescription = null, tint = TextMuted, modifier = Modifier.size(16.dp))
-                    Text(offer.entrepriseNom, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.secondary)
+                    Text(offer.entrepriseNom, style = MaterialTheme.typography.bodyMedium, color = TextSecondary)
                 }
             }
 

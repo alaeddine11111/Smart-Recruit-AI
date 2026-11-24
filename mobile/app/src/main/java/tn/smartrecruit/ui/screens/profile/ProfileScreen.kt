@@ -42,6 +42,8 @@ import tn.smartrecruit.ui.components.ErrorText
 import tn.smartrecruit.ui.components.PrimaryButton
 import tn.smartrecruit.ui.screens.auth.SessionViewModel
 import tn.smartrecruit.ui.theme.TextMuted
+import tn.smartrecruit.ui.theme.TextPrimary
+import tn.smartrecruit.ui.theme.TextSecondary
 
 /** Profile tab, shared by candidates and recruiters (fields depend on the role). */
 @Composable
@@ -118,14 +120,14 @@ private fun ProfileContent(
                 Text(
                     profile.fullName?.firstOrNull()?.uppercase() ?: "?",
                     style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.primary
+                    color = TextPrimary
                 )
             }
             Column {
-                Text(profile.fullName.orEmpty(), style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.primary)
+                Text(profile.fullName.orEmpty(), style = MaterialTheme.typography.titleLarge, color = TextPrimary)
                 Text(
                     if (role == Role.RECRUTEUR) "Recruteur" else "Candidat",
-                    color = MaterialTheme.colorScheme.secondary
+                    color = TextSecondary
                 )
             }
         }
@@ -156,7 +158,7 @@ private fun ProfileContent(
         }
 
         ErrorText(state.error)
-        state.message?.let { Text(it, color = MaterialTheme.colorScheme.primary) }
+        state.message?.let { Text(it, color = TextPrimary) }
 
         PrimaryButton("Enregistrer", onClick = { onSave(name, phone, location, position) }, loading = state.saving)
         OutlinedButton(onClick = onChangePassword, modifier = Modifier.fillMaxWidth()) {

@@ -31,8 +31,9 @@ import tn.smartrecruit.data.remote.dto.SkillDto
 import tn.smartrecruit.di.appViewModelFactory
 import tn.smartrecruit.ui.components.ErrorText
 import tn.smartrecruit.ui.components.PrimaryButton
-import tn.smartrecruit.ui.theme.GreenLight
+import tn.smartrecruit.ui.theme.CvCardBackground
 import tn.smartrecruit.ui.theme.TextMuted
+import tn.smartrecruit.ui.theme.TextPrimary
 
 private fun formatSize(bytes: Long): String =
     if (bytes < 1024 * 1024) "${maxOf(1, bytes / 1024)} Ko" else "%.1f Mo".format(bytes / 1024.0 / 1024.0)
@@ -60,13 +61,13 @@ fun CvScreen() {
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         item {
-            Text("Mon CV", style = MaterialTheme.typography.headlineMedium, color = MaterialTheme.colorScheme.primary)
+            Text("Mon CV", style = MaterialTheme.typography.headlineMedium, color = TextPrimary)
             Text("Un PDF suffit. L'IA en extrait vos compétences, puis vous validez celles qui sont justes.", color = TextMuted)
         }
 
         state.cv?.let { cv ->
             item {
-                Card(colors = CardDefaults.cardColors(containerColor = GreenLight), modifier = Modifier.fillMaxWidth()) {
+                Card(colors = CardDefaults.cardColors(containerColor = CvCardBackground), modifier = Modifier.fillMaxWidth()) {
                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                         Text("CV actuel", color = TextMuted)
                         Text(cv.fileName ?: "cv.pdf", style = MaterialTheme.typography.titleMedium)
@@ -169,7 +170,7 @@ fun CvScreen() {
                     enabled = state.selectedSkills.isNotEmpty()
                 )
             }
-            state.message?.let { msg -> item { Text(msg, color = MaterialTheme.colorScheme.primary) } }
+            state.message?.let { msg -> item { Text(msg, color = TextPrimary) } }
         }
     }
 }

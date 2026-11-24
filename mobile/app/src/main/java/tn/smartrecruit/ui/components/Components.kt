@@ -33,6 +33,8 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import tn.smartrecruit.ui.theme.TextMuted
+import tn.smartrecruit.ui.theme.TextPrimary
+import tn.smartrecruit.ui.theme.TextSecondary
 
 /** Common layout of the auth screens: scrollable column on the cream background. */
 @Composable
@@ -48,8 +50,8 @@ fun AuthScaffold(
             .padding(horizontal = 24.dp, vertical = 32.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Text("SmartRecruit AI", color = MaterialTheme.colorScheme.secondary, style = MaterialTheme.typography.labelLarge)
-        Text(title, style = MaterialTheme.typography.headlineMedium, color = MaterialTheme.colorScheme.primary)
+        Text("SmartRecruit AI", color = TextSecondary, style = MaterialTheme.typography.labelLarge)
+        Text(title, style = MaterialTheme.typography.headlineMedium, color = TextPrimary)
         if (subtitle != null) Text(subtitle, color = TextMuted)
         content()
     }

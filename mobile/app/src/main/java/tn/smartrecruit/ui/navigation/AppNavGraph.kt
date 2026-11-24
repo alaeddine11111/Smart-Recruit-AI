@@ -23,7 +23,10 @@ private fun NavHostController.clearAndGo(route: String) =
     navigate(route) { popUpTo(graph.id) { inclusive = true } }
 
 @Composable
-fun AppNavGraph() {
+fun AppNavGraph(
+    darkMode: Boolean = false,
+    onToggleDarkMode: () -> Unit = {}
+) {
     val nav = rememberNavController()
 
     NavHost(navController = nav, startDestination = Routes.SPLASH) {
@@ -78,11 +81,19 @@ fun AppNavGraph() {
         }
 
         composable(Routes.CANDIDATE_HOME) {
-            CandidateMainScreen(onLoggedOut = { nav.clearAndGo(Routes.WELCOME) })
+            CandidateMainScreen(
+                onLoggedOut = { nav.clearAndGo(Routes.WELCOME) },
+                darkMode = darkMode,
+                onToggleDarkMode = onToggleDarkMode
+            )
         }
 
         composable(Routes.RECRUITER_HOME) {
-            RecruiterHomeScreen(onLoggedOut = { nav.clearAndGo(Routes.WELCOME) })
+            RecruiterHomeScreen(
+                onLoggedOut = { nav.clearAndGo(Routes.WELCOME) },
+                darkMode = darkMode,
+                onToggleDarkMode = onToggleDarkMode
+            )
         }
     }
 }

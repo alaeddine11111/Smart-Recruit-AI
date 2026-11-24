@@ -5,8 +5,9 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.outlined.Business
 import androidx.compose.material.icons.outlined.Group
 import androidx.compose.material.icons.outlined.Person
@@ -43,6 +44,7 @@ import tn.smartrecruit.di.appViewModelFactory
 import tn.smartrecruit.ui.screens.auth.SessionViewModel
 import tn.smartrecruit.ui.screens.profile.ProfileScreen
 import tn.smartrecruit.ui.theme.TextMuted
+import tn.smartrecruit.ui.theme.TextPrimary
 
 /** Tabs in the recruiter bottom bar. */
 enum class RecruiterTab(val route: String, val label: String, val icon: ImageVector) {
@@ -54,7 +56,11 @@ enum class RecruiterTab(val route: String, val label: String, val icon: ImageVec
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RecruiterHomeScreen(onLoggedOut: () -> Unit) {
+fun RecruiterHomeScreen(
+    onLoggedOut: () -> Unit,
+    darkMode: Boolean = false,
+    onToggleDarkMode: () -> Unit = {}
+) {
     val session: SessionViewModel = viewModel(factory = appViewModelFactory())
     val inner = rememberNavController()
     val backStack by inner.currentBackStackEntryAsState()
@@ -73,8 +79,11 @@ fun RecruiterHomeScreen(onLoggedOut: () -> Unit) {
                 title = { Text("SmartRecruit AI") },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
                 actions = {
-                    IconButton(onClick = { /* TODO notifications */ }) {
-                        Icon(Icons.Filled.Notifications, contentDescription = "Notifications")
+                    IconButton(onClick = onToggleDarkMode) {
+                        Icon(
+                            imageVector = if (darkMode) Icons.Filled.LightMode else Icons.Filled.DarkMode,
+                            contentDescription = if (darkMode) "Activer le mode clair" else "Activer le mode sombre"
+                        )
                     }
                     IconButton(onClick = { menuOpen = true }) {
                         Icon(Icons.Filled.MoreVert, contentDescription = "Menu")
@@ -167,7 +176,7 @@ private fun Placeholder(title: String, subtitle: String) {
             .padding(24.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Text(title, style = MaterialTheme.typography.headlineMedium, color = MaterialTheme.colorScheme.primary)
+        Text(title, style = MaterialTheme.typography.headlineMedium, color = TextPrimary)
         Text(subtitle, color = TextMuted)
     }
 }

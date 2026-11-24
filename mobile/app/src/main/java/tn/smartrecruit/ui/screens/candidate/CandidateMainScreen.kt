@@ -7,8 +7,9 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.outlined.Description
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Mic
@@ -49,6 +50,7 @@ import tn.smartrecruit.ui.screens.auth.SessionViewModel
 import tn.smartrecruit.ui.screens.cv.CvScreen
 import tn.smartrecruit.ui.screens.profile.ProfileScreen
 import tn.smartrecruit.ui.theme.TextMuted
+import tn.smartrecruit.ui.theme.TextPrimary
 
 /** The 5 bottom tabs of the candidate app (enum with properties). */
 enum class CandidateTab(val route: String, val label: String, val icon: ImageVector) {
@@ -61,7 +63,11 @@ enum class CandidateTab(val route: String, val label: String, val icon: ImageVec
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CandidateMainScreen(onLoggedOut: () -> Unit) {
+fun CandidateMainScreen(
+    onLoggedOut: () -> Unit,
+    darkMode: Boolean = false,
+    onToggleDarkMode: () -> Unit = {}
+) {
     val session: SessionViewModel = viewModel(factory = appViewModelFactory())
     val userName by session.userName.collectAsStateWithLifecycle()
     val jobsViewModel: CandidateJobsViewModel = viewModel(factory = appViewModelFactory())
@@ -84,8 +90,11 @@ fun CandidateMainScreen(onLoggedOut: () -> Unit) {
                 title = { Text("SmartRecruit AI") },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
                 actions = {
-                    IconButton(onClick = { /* TODO notifications */ }) {
-                        Icon(Icons.Filled.Notifications, contentDescription = "Notifications")
+                    IconButton(onClick = onToggleDarkMode) {
+                        Icon(
+                            imageVector = if (darkMode) Icons.Filled.LightMode else Icons.Filled.DarkMode,
+                            contentDescription = if (darkMode) "Activer le mode clair" else "Activer le mode sombre"
+                        )
                     }
                     IconButton(onClick = { menuOpen = true }) {
                         Icon(Icons.Filled.MoreVert, contentDescription = "Menu")
@@ -139,7 +148,18 @@ fun CandidateMainScreen(onLoggedOut: () -> Unit) {
         }
     ) { padding ->
         NavHost(inner, startDestination = CandidateTab.HOME.route, modifier = Modifier.padding(padding)) {
-            composable(CandidateTab.HOME.route) { Placeholder("Hello, ${userName ?: ""}", "Profile progress, recommended jobs and recent application come next.") }
+            composable(CandidateTab.HOME.route) {
+                RecommendationsScreen(
+                    header = {
+                        Text(
+                            "Hello, ${userName ?: ""}",
+                            style = MaterialTheme.typography.headlineMedium,
+                            color = TextPrimary
+                        )
+                    },
+                    onOfferClick = { offerId -> inner.navigate("job_detail/$offerId") }
+                )
+            }
             composable(CandidateTab.JOBS.route) {
                 CandidateJobsScreen(
                     onOfferClick = { offerId -> inner.navigate("job_detail/$offerId") },
@@ -156,8 +176,10 @@ fun CandidateMainScreen(onLoggedOut: () -> Unit) {
                     onBack = { inner.popBackStack() }
                 )
             }
-            composable(CandidateTab.APPLICATIONS.route) { RecommendationsScreen() }
-            composable(CandidateTab.INTERVIEW.route) { Placeholder("Interview", "AI interview preparation (later).") }
+            composable(CandidateTab.APPLICATIONS.route) {
+                ApplicationsScreen(onOfferClick = { offerId -> inner.navigate("job_detail/$offerId") })
+            }
+            composable(CandidateTab.INTERVIEW.route) { InterviewPreparationScreen() }
             composable(CandidateTab.PROFILE.route) { ProfileScreen(onLoggedOut = onLoggedOut) }
             composable("cv") { CvScreen() }
         }
@@ -167,7 +189,7 @@ fun CandidateMainScreen(onLoggedOut: () -> Unit) {
 @Composable
 private fun Placeholder(title: String, subtitle: String) {
     Column(Modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(title, style = MaterialTheme.typography.headlineMedium, color = MaterialTheme.colorScheme.primary)
+        Text(title, style = MaterialTheme.typography.headlineMedium, color = TextPrimary)
         Text(subtitle, color = TextMuted)
     }
 }

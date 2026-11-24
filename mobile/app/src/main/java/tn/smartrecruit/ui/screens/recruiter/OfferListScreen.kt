@@ -53,6 +53,7 @@ import tn.smartrecruit.data.remote.dto.OffreDto
 import tn.smartrecruit.di.appViewModelFactory
 import tn.smartrecruit.ui.components.ErrorText
 import tn.smartrecruit.ui.theme.TextMuted
+import tn.smartrecruit.ui.theme.TextPrimary
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -221,7 +222,7 @@ private fun OfferCard(
             if (offer.competences.isNotEmpty()) {
                 Text(
                     offer.competences.take(5).joinToString(" · "),
-                    color = MaterialTheme.colorScheme.primary,
+                    color = TextPrimary,
                     style = MaterialTheme.typography.bodySmall
                 )
             }

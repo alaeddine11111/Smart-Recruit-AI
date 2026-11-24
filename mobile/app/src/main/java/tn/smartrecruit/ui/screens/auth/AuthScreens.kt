@@ -50,6 +50,7 @@ import tn.smartrecruit.ui.components.AuthScaffold
 import tn.smartrecruit.ui.components.ErrorText
 import tn.smartrecruit.ui.components.PrimaryButton
 import tn.smartrecruit.ui.theme.TextMuted
+import tn.smartrecruit.ui.theme.TextPrimary
 
 // ---------------- Splash ----------------
 @Composable
@@ -68,7 +69,7 @@ fun SplashScreen(onFinished: (Role) -> Unit) {
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             // TODO: replace with the real logo (res/drawable) once exported from Figma
-            Text("Smart Recruit AI", style = MaterialTheme.typography.headlineMedium, color = MaterialTheme.colorScheme.primary)
+            Text("Smart Recruit AI", style = MaterialTheme.typography.headlineMedium, color = TextPrimary)
             Text("Find . Match . Grow", color = TextMuted)
         }
     }
@@ -82,7 +83,7 @@ fun WelcomeScreen(onCreateAccount: () -> Unit, onLogin: () -> Unit) {
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text("Welcome to SmartRecruit AI", style = MaterialTheme.typography.headlineMedium, textAlign = TextAlign.Center, color = MaterialTheme.colorScheme.primary)
+        Text("Welcome to SmartRecruit AI", style = MaterialTheme.typography.headlineMedium, textAlign = TextAlign.Center, color = TextPrimary)
         Spacer(Modifier.height(8.dp))
         Text("Find the right match between your skills and the best job offers.", color = TextMuted, textAlign = TextAlign.Center)
         Spacer(Modifier.height(32.dp))
@@ -99,7 +100,7 @@ fun ChooseRoleScreen(onContinue: (String) -> Unit, onBack: () -> Unit) {
 
     Column(Modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
         Spacer(Modifier.height(24.dp))
-        Text("A better match starts here", style = MaterialTheme.typography.headlineMedium, color = MaterialTheme.colorScheme.primary)
+        Text("A better match starts here", style = MaterialTheme.typography.headlineMedium, color = TextPrimary)
         Text("How would you like to use SmartRecruit AI?", color = TextMuted)
 
         RoleCard(
@@ -251,7 +252,7 @@ fun PendingApprovalScreen(onBackToLogin: () -> Unit) {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Icon(Icons.Filled.HourglassTop, contentDescription = null, tint = MaterialTheme.colorScheme.secondary, modifier = Modifier.padding(bottom = 16.dp))
-        Text("Demande envoyée", style = MaterialTheme.typography.headlineMedium, color = MaterialTheme.colorScheme.primary)
+        Text("Demande envoyée", style = MaterialTheme.typography.headlineMedium, color = TextPrimary)
         Spacer(Modifier.height(8.dp))
         Text(
             "Un administrateur doit valider votre demande avant que vous puissiez vous connecter en tant que recruteur.",

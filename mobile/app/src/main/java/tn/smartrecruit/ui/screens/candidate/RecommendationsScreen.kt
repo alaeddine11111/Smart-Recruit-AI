@@ -40,10 +40,13 @@ import tn.smartrecruit.data.remote.dto.MatchingResultDto
 import tn.smartrecruit.di.appViewModelFactory
 import tn.smartrecruit.ui.components.ErrorText
 import tn.smartrecruit.ui.theme.TextMuted
+import tn.smartrecruit.ui.theme.TextPrimary
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun RecommendationsScreen(
+    header: (@Composable () -> Unit)? = null,
+    onOfferClick: (String) -> Unit = {},
     vm: RecommendationsViewModel = viewModel(factory = appViewModelFactory())
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
@@ -93,10 +96,11 @@ fun RecommendationsScreen(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 item {
+                    header?.invoke()
                     Text(
                         "Offres recommandées",
                         style = MaterialTheme.typography.headlineSmall,
-                        color = MaterialTheme.colorScheme.primary
+                        color = TextPrimary
                     )
                     Text(
                         "Résultats internes et externes classés par correspondance.",
@@ -108,7 +112,7 @@ fun RecommendationsScreen(
                     items = state.results,
                     key = { it.offer.id }
                 ) { result ->
-                    RecommendationCard(result)
+                    RecommendationCard(result, onOfferClick)
                 }
             }
         }
@@ -117,12 +121,14 @@ fun RecommendationsScreen(
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun RecommendationCard(result: MatchingResultDto) {
+private fun RecommendationCard(result: MatchingResultDto, onOfferClick: (String) -> Unit) {
     val offer = result.offer
     val context = LocalContext.current
     val isInternal = offer.source == "INTERNE"
 
     Card(
+        onClick = { if (isInternal) onOfferClick(offer.id) },
+        enabled = isInternal,
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
@@ -153,7 +159,7 @@ private fun RecommendationCard(result: MatchingResultDto) {
                     Text(
                         offer.title,
                         style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.primary
+                        color = TextPrimary
                     )
 
                     if (!offer.company.isNullOrBlank() || !offer.location.isNullOrBlank()) {
@@ -171,7 +177,7 @@ private fun RecommendationCard(result: MatchingResultDto) {
                 Text(
                     "${result.score}%",
                     style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.primary
+                    color = TextPrimary
                 )
             }
 
@@ -197,7 +203,7 @@ private fun RecommendationCard(result: MatchingResultDto) {
             Text(
                 "Compétences correspondantes",
                 style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.primary
+                color = TextPrimary
             )
 
             if (result.matchingSkills.isEmpty()) {
@@ -209,7 +215,7 @@ private fun RecommendationCard(result: MatchingResultDto) {
             Text(
                 "Compétences à développer",
                 style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.primary
+                color = TextPrimary
             )
 
             if (result.missingSkills.isEmpty()) {

@@ -3,10 +3,13 @@ package tn.smartrecruit.di
 import android.content.Context
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
+import tn.smartrecruit.data.local.ThemePreferences
 import tn.smartrecruit.data.local.TokenStore
 import tn.smartrecruit.data.remote.ApiClient
+import tn.smartrecruit.data.repository.ApplicationRepository
 import tn.smartrecruit.data.repository.AuthRepository
 import tn.smartrecruit.data.repository.CvRepository
+import tn.smartrecruit.data.repository.InterviewPreparationRepository
 import tn.smartrecruit.data.repository.OfferRepository
 import tn.smartrecruit.data.repository.ProfileRepository
 import tn.smartrecruit.data.repository.MatchingRepository
@@ -14,6 +17,8 @@ import tn.smartrecruit.data.repository.MatchingRepository
 /** Manual dependency injection (course: "Injection manuelle : un conteneur d'application"). */
 class AppContainer(context: Context) {
     val tokenStore = TokenStore(context)
+
+    val themePreferences by lazy { ThemePreferences(context) }
 
     private val apiClient = ApiClient { runBlocking { tokenStore.token.first() } }
 
@@ -28,6 +33,10 @@ class AppContainer(context: Context) {
     }
 
     val offerRepository by lazy { OfferRepository(apiClient.offerApi) }
+
+    val applicationRepository by lazy { ApplicationRepository(apiClient.offerApi) }
+
+    val interviewPreparationRepository by lazy { InterviewPreparationRepository(apiClient.cvApi) }
 
         val matchingRepository by lazy {
         MatchingRepository(
